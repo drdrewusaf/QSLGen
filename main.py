@@ -1,17 +1,19 @@
-import requests
-import html2text
-import adif_io
-import re
 import datetime
-import xlsxwriter
+import os
+import re
 import string
+
+import adif_io
+import html2text
+import requests
+import xlsxwriter
 
 qsos = []
 reduxqsos = []
-wantedKeys = ['KEY','BAND','CALL','EMAIL','FREQ','MODE','NAME','QSO_DATE','RST_RCVD','TIME_OFF']
+wantedKeys = ['KEY', 'BAND', 'CALL', 'EMAIL', 'FREQ', 'MODE', 'NAME', 'QSO_DATE', 'RST_RCVD', 'TIME_OFF']
 headerCount = len(wantedKeys)
 headerLetter = list(string.ascii_uppercase)[headerCount - 1]
-datesince = datetime.date.today()
+datesince = datetime.date.fromtimestamp(os.path.getmtime('QSOs.xlsx'))
 """
 Replace *APIKEY* in the payload variable below with your QRZ.com API key without dashes.
 """
@@ -42,7 +44,7 @@ for i in qsos:
                 keyCount += 1
         elif k in wantedKeys[keyCount]:
             curr_qso.append(i[k])
-            if keyCount < len(wantedKeys)-1:
+            if keyCount < len(wantedKeys) - 1:
                 keyCount += 1
     reduxqsos.append(curr_qso)
     tblKey += 1
@@ -50,17 +52,17 @@ for i in qsos:
 workbook = xlsxwriter.Workbook('QSOs.xlsx')
 worksheet = workbook.add_worksheet()
 worksheet.add_table(f'A1:{headerLetter}{dataLen}', {'name': 'QSOS',
-                                           'data': reduxqsos,
-                                           'columns': [{'header': wantedKeys[0]},
-                                                       {'header': wantedKeys[1]},
-                                                       {'header': wantedKeys[2]},
-                                                       {'header': wantedKeys[3]},
-                                                       {'header': wantedKeys[4]},
-                                                       {'header': wantedKeys[5]},
-                                                       {'header': wantedKeys[6]},
-                                                       {'header': wantedKeys[7]},
-                                                       {'header': wantedKeys[8]},
-                                                       {'header': wantedKeys[9]}
-                                                       ]})
+                                                    'data': reduxqsos,
+                                                    'columns': [{'header': wantedKeys[0]},
+                                                                {'header': wantedKeys[1]},
+                                                                {'header': wantedKeys[2]},
+                                                                {'header': wantedKeys[3]},
+                                                                {'header': wantedKeys[4]},
+                                                                {'header': wantedKeys[5]},
+                                                                {'header': wantedKeys[6]},
+                                                                {'header': wantedKeys[7]},
+                                                                {'header': wantedKeys[8]},
+                                                                {'header': wantedKeys[9]}
+                                                                ]})
 workbook.close()
 exit(0)
