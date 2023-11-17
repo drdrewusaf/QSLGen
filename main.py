@@ -1,11 +1,11 @@
 import datetime
-import os
 import re
 import string
 
 import adif_io
 import html2text
 import requests
+import win32com.client as win32
 import xlsxwriter
 
 qsos = []
@@ -48,7 +48,9 @@ for i in qsos:
                 keyCount += 1
     reduxqsos.append(curr_qso)
     tblKey += 1
-
+"""
+Create an Excel spreadsheet with the downloaded QSOs.
+"""
 workbook = xlsxwriter.Workbook('QSOs.xlsx')
 worksheet = workbook.add_worksheet()
 worksheet.add_table(f'A1:{headerLetter}{dataLen}', {'name': 'QSOS',
@@ -65,4 +67,16 @@ worksheet.add_table(f'A1:{headerLetter}{dataLen}', {'name': 'QSOS',
                                                                 {'header': wantedKeys[9]}
                                                                 ]})
 workbook.close()
+"""
+Send an email to trigger the Power Automate flow.
+"""
+outlook = win32.Dispatch('outlook.application')
+mail = outlook.CreateItem(0)
+"""
+Replace email address here with the one you use to trigger Power Automate.
+"""
+mail.To = 'email@email.com'
+mail.Subject = f'QSLGen QSOs {datetime.date.today()}'
+mail.Body = 'QSO file created and ready for Power Automate to process.'
+mail.Send()
 exit(0)
