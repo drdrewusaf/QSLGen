@@ -1,4 +1,5 @@
 import datetime
+import os
 import re
 import string
 
@@ -24,7 +25,12 @@ data = html2text.html2text(r.text)
 try:
     data_re = re.search('<', data).span()
 except:
-    print(data)
+    with open('log.txt', 'w'):
+        print('***********')
+        print(f'Datesince: {datesince}')
+        print(f'Data: \n{data}')
+        print('Regex failed. Probably no new confirmed QSOs.')
+        print('***********')
     print('Regex failed. Probably no new confirmed QSOs.')
     exit(0)
 cursor = data_re[0]
