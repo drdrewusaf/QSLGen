@@ -11,32 +11,48 @@ import xlsxwriter
 
 qsos = []
 reduxqsos = []
+"""
+Place your QRZ.com logbook API keys, without dashes, in the apiKeys array variable below.
+"""
+apiKeys = ['EXAMPLEKEY1',
+           'EXAMPLEKEY2',
+           'EXAMPLEKEY3']
 wantedKeys = ['KEY', 'BAND', 'CALL', 'EMAIL', 'FREQ', 'MODE', 'NAME', 'QSO_DATE', 'RST_RCVD', 'TIME_OFF']
 headerCount = len(wantedKeys)
 headerLetter = list(string.ascii_uppercase)[headerCount - 1]
 datesince = datetime.date.fromtimestamp(os.path.getmtime('QSOs.xlsx'))
-"""
-Replace *APIKEY* in the payload variable below with your QRZ.com API key without dashes.
-"""
-payload = {'KEY': '*APIKEY*', 'ACTION': 'FETCH', 'OPTION': f'MODSINCE:{datesince},STATUS:CONFIRMED'}
-url = 'https://logbook.qrz.com/api'
-r = requests.get(url, params=payload)
-data = html2text.html2text(r.text)
-try:
-    data_re = re.search('<', data).span()
-except:
-    with open('log.txt', 'w'):
-        print('***********')
-        print(f'Datesince: {datesince}')
-        print(f'Data: \n{data}')
-        print('Regex failed. Probably no new confirmed QSOs.')
-        print('***********')
-    print('Regex failed. Probably no new confirmed QSOs.')
-    exit(0)
-cursor = data_re[0]
-data = data[cursor:]
-qsos = adif_io.read_from_string(data)[0]
+
+for k in apiKeys:
+    payload = {'KEY':f'{k}', 'ACTION':'FETCH', 'OPTION': f'MODSINCE:{datesince}, STATUS:CONFIRMED'}
+    url = 'https://logbook.qrz.com/api'
+    r = requests.get(url, params=payload)
+    data = html2text.html2text(r.text)
+    try:
+        data_re = re.search('<', data).span()
+    except:
+        with open('log.txt', 'a') as log:
+            log.write(f'API Key: {k}\n'
+                      f'Datesince: {datesince}\n'
+                      f'Data: \n{data}'
+                      'Regex failed. Probably no new confirmed QSOs.\n'
+                      '***********\n')
+            log.close()
+    else:
+        cursor = data_re[0]
+        data = data[cursor:]
+        adifData = adif_io.read_from_string(data)[0]
+        if len(qsos) > 0:
+            qsos.append(adifData[0])
+        else:
+            qsos = adifData
+
 dataLen = len(qsos)
+if dataLen <= 0:
+    with open('log.txt', 'a') as log:
+        log.write(f'Length of data is {dataLen}.\n'
+                  'No new confirmed QSOs this week.\n'
+                  '***********\r\n')
+        log.close()
 
 tblKey = 1
 for i in qsos:
