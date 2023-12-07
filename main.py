@@ -1,35 +1,42 @@
 import datetime
 import os
 import re
-import string
 
 import adif_io
 import html2text
 import requests
 import win32com.client as win32
-import xlsxwriter
+
+# To use imgkit, you need to install wkhtmltopdf for your OS and add it to PATH.
+import imgkit
+from bs4 import BeautifulSoup
 
 qsos = []
 reduxqsos = []
-"""
-Place your QRZ.com logbook API keys, without dashes, in the apiKeys array variable below.
-"""
+# These options are set for the size of my QSL card...change to your preference.
+imgkitOptions = {
+    'format': 'jpg',
+    'crop-w': '1800',
+    'crop-h': '1115',
+    'enable-local-file-access':''  #Do not remove this option, or imgkit/wkhtmltoimage will fail.
+}
+# PLace your calsign in the variable below.
+myCall = 'CALLSIGN'
+# Place your QRZ.com logbook API keys, without dashes, in the apiKeys array variable below.
 apiKeys = ['EXAMPLEKEY1',
            'EXAMPLEKEY2',
            'EXAMPLEKEY3']
-wantedKeys = ['KEY', 'BAND', 'CALL', 'EMAIL', 'FREQ', 'MODE', 'NAME', 'QSO_DATE', 'RST_RCVD', 'TIME_OFF']
-xlsxHeaderCount = len(wantedKeys)
-xlsxHeaderLetter = list(string.ascii_uppercase)[xlsxHeaderCount - 1]
+wantedKeys = ['BAND', 'CALL', 'EMAIL', 'FREQ', 'MODE', 'NAME', 'QSO_DATE', 'RST_RCVD', 'TIME_OFF']
 try:
-    datesince = datetime.date.fromtimestamp(os.path.getmtime('QSOs.xlsx'))
+    datesince = datetime.date.fromtimestamp(os.path.getmtime('Curr_QSLGen.html'))
 except FileNotFoundError:
-    print('Could not find QSO.xlsx file. Assuming this is the first run.\n'
-          'This program uses the last modified date of the QSO.xlsx file to determine\n'
-          'which QSOs to download. Since that file does not exist, please provide the\n'
-          'first date from which to gather confirmed QSOs. After this first run the\n'
-          'QSO.xlsx file should only be edited to delete all table rows after you have\n'
-          'processed your QSOs. As long as the file exists, you will not be asked for\n'
-          'a date again. Suggest using a relatively recent date.\n')
+    print('Could not find Curr_QSLGen.html file. Assuming this is the first run.\n'
+          'This program uses the last modified date of the Curr_QSLGen.html file to\n'
+          'determine which QSOs to download. Since that file does not exist, please \n'
+          'provide the first date from which to gather confirmed QSOs. After this\n'
+          'first run, the Curr_QSLGen.html file should not be deleted or modified by\n'
+          'anything other than this script. As long as the file exists, you will not\n'
+          'be asked for a date again. Suggest using a relatively recent date.\n')
     datesince = input('Please provide your desired date in the YYYY-MM-DD format:  ')
 
 for k in apiKeys:
@@ -53,7 +60,6 @@ for k in apiKeys:
         else:
             print(f'Regex failed. Probably no confirmed QSOs since {datesince}.')
         print(f'Here is the data the server returned: {data}')
-
     else:
         cursor = data_re[0]
         data = data[cursor:]
@@ -72,11 +78,9 @@ if dataLen <= 0:
         log.close()
     print(f'No new confirmed QSOs since {datesince}.')
 else:
-    tblKey = 1
     for i in qsos:
         curr_qso = []
-        keyCount = 1
-        curr_qso.append(tblKey)
+        keyCount = 0
         for k in i:
             if wantedKeys[keyCount] not in i.keys():
                 curr_qso.append('')
@@ -87,40 +91,48 @@ else:
                 if keyCount < len(wantedKeys) - 1:
                     keyCount += 1
         reduxqsos.append(curr_qso)
-        tblKey += 1
-    """
-    Create an Excel spreadsheet with the downloaded QSOs.
-    """
-    workbook = xlsxwriter.Workbook('QSOs.xlsx')
-    worksheet = workbook.add_worksheet()
-    worksheet.add_table(f'A1:{xlsxHeaderLetter}{dataLen}', {'name': 'QSOS',
-                                                        'data': reduxqsos,
-                                                        'columns': [{'header': wantedKeys[0]},
-                                                                    {'header': wantedKeys[1]},
-                                                                    {'header': wantedKeys[2]},
-                                                                    {'header': wantedKeys[3]},
-                                                                    {'header': wantedKeys[4]},
-                                                                    {'header': wantedKeys[5]},
-                                                                    {'header': wantedKeys[6]},
-                                                                    {'header': wantedKeys[7]},
-                                                                    {'header': wantedKeys[8]},
-                                                                    {'header': wantedKeys[9]}
-                                                                    ]})
-    workbook.close()
-    print('Success!\n')
-    print(f'QSOs since {datesince} were written to QSO.xlsx in the same directory as this program.\n\n')
-    print('Sending email to trigger Power Automate.')
-    """
-    Send an email to trigger the Power Automate flow.
-    """
-    outlook = win32.Dispatch('outlook.application')
-    mail = outlook.CreateItem(0)
-    """
-    Replace email address here with the one you use to trigger Power Automate.
-    """
-    mail.To = 'email@email.com'
-    mail.Subject = f'QSLGen QSOs {datetime.date.today()}'
-    mail.Body = 'QSO file created and ready for Power Automate to process.'
-    mail.Send()
-    print('Email sent.')
+
+for q in reduxqsos:
+    if len(q[2]) > 0:
+        with open('QSLGen.html') as templateFile:
+            soup = BeautifulSoup(templateFile, 'html.parser')
+        templateFile.close()
+        idCount = 0
+        while idCount < 9:
+            try:
+                soup.find_all(id=idCount)[0].string.replaceWith(q[idCount])
+                idCount += 1
+            except IndexError:
+                idCount += 1
+        soup.b.string.replaceWith(f'Thanks for the QSO! 73 de {myCall}')
+        with open('Curr_QSLGen.html', 'w') as currQSL:
+            currQSL.write(str(soup))
+        currQSL.close()
+        filenameQSLCard = f'{q[1]} de {myCall}.jpg'
+        imgkit.from_file('Curr_QSLGen.html',filenameQSLCard, options=imgkitOptions)
+        print(f'Sending QSL card email to {q[1]}.')
+        if " " in q[5]:
+            emailName = q[5].split(" ")[0]
+        else:
+            emailName = q[5]
+        outlook = win32.Dispatch('outlook.application')
+        mail = outlook.CreateItem(0)
+        mail.To = q[2]
+        mail.Subject = f'QSL de {myCall}'
+        mail.Body = (f'Good Day {emailName} ({q[1]})!\n\n'
+                     'Thank you for the QSO!  You will find my QSL card attached.  The QSO is logged on QRZ and LOTW.\n'
+                     'Hope to hear you on the air again soon!\n\n\n'
+                     '73,\n'
+                     f'{myCall}\n'
+                     'Andrew\n\n'
+                     '*This email was automatically generated and sent using my QSLGen Python script: '
+                     'https://github.com/drdrewusaf/QSLGen *')
+        attachment = f'{os.getcwd()}\\{filenameQSLCard}'
+        mail.Attachments.Add(attachment)
+        mail.Send()
+        print('Email sent.')
+        print('Deleting QSL card.')
+        os.remove(filenameQSLCard)
+    else:
+        pass
 exit(0)
