@@ -18,7 +18,7 @@ imgkitOptions = {
     'format': 'jpg',
     'crop-w': '1800',
     'crop-h': '1115',
-    'enable-local-file-access':''  #Do not remove this option, or imgkit/wkhtmltoimage will fail.
+    'enable-local-file-access':''  # Do not remove this option; it will cause imgkit/wkhtmltoimage failure.
 }
 # PLace your calsign in the variable below.
 myCall = 'CALLSIGN'
@@ -28,7 +28,7 @@ apiKeys = ['EXAMPLEKEY1',
            'EXAMPLEKEY3']
 wantedKeys = ['BAND', 'CALL', 'EMAIL', 'FREQ', 'MODE', 'NAME', 'QSO_DATE', 'RST_RCVD', 'TIME_OFF']
 try:
-    datesince = datetime.date.fromtimestamp(os.path.getmtime('Curr_QSLGen.html'))
+    dateSince = datetime.date.fromtimestamp(os.path.getmtime('Curr_QSLGen.html'))
 except FileNotFoundError:
     print('Could not find Curr_QSLGen.html file. Assuming this is the first run.\n'
           'This program uses the last modified date of the Curr_QSLGen.html file to\n'
@@ -37,11 +37,11 @@ except FileNotFoundError:
           'first run, the Curr_QSLGen.html file should not be deleted or modified by\n'
           'anything other than this script. As long as the file exists, you will not\n'
           'be asked for a date again. Suggest using a relatively recent date.\n')
-    datesince = input('Please provide your desired date in the YYYY-MM-DD format:  ')
+    dateSince = input('Please provide your desired date in the YYYY-MM-DD format:  ')
 
 for k in apiKeys:
-    print(f'Gathering confimed QSOs since {datesince} for logbook API key {k}...')
-    payload = {'KEY':f'{k}', 'ACTION':'FETCH', 'OPTION': f'MODSINCE:{datesince}, STATUS:CONFIRMED'}
+    print(f'Gathering confimed QSOs since {dateSince} for logbook API key {k}...')
+    payload = {'KEY':f'{k}', 'ACTION':'FETCH', 'OPTION': f'MODSINCE:{dateSince}, STATUS:CONFIRMED'}
     url = 'https://logbook.qrz.com/api'
     r = requests.get(url, params=payload)
     data = html2text.html2text(r.text)
@@ -50,7 +50,7 @@ for k in apiKeys:
     except:
         with open('log.txt', 'a') as log:
             log.write(f'API Key: {k}\n'
-                      f'Datesince: {datesince}\n'
+                      f'Date since: {dateSince}\n'
                       f'Data: \n{data}'
                       'Regex failed. Probably no new confirmed QSOs.\n'
                       '***********\n')
@@ -58,7 +58,7 @@ for k in apiKeys:
         if 'invalid api key' in data:
             print(f'Check your API Key. QRZ.com reported an invalid key.')
         else:
-            print(f'Regex failed. Probably no confirmed QSOs since {datesince}.')
+            print(f'Regex failed. Probably no confirmed QSOs since {dateSince}.')
         print(f'Here is the data the server returned: {data}')
     else:
         cursor = data_re[0]
@@ -73,10 +73,10 @@ dataLen = len(qsos)
 if dataLen <= 0:
     with open('log.txt', 'a') as log:
         log.write(f'Length of data is {dataLen}.\n'
-                  f'No new confirmed QSOs since {datesince}.\n'
+                  f'No new confirmed QSOs since {dateSince}.\n'
                   '***********\r\n')
         log.close()
-    print(f'No new confirmed QSOs since {datesince}.')
+    print(f'No new confirmed QSOs since {dateSince}.')
 else:
     for i in qsos:
         curr_qso = []
@@ -124,7 +124,7 @@ for q in reduxqsos:
                      'Hope to hear you on the air again soon!\n\n\n'
                      '73,\n'
                      f'{myCall}\n'
-                     'Andrew\n\n'
+                     'Yourname\n\n'  # Place your name here.
                      '*This email was automatically generated and sent using my QSLGen Python script: '
                      'https://github.com/drdrewusaf/QSLGen *')
         attachment = f'{os.getcwd()}\\{filenameQSLCard}'
