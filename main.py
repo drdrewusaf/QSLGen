@@ -14,7 +14,7 @@ from bs4 import BeautifulSoup
 qsos = []
 reduxqsos = []
 """
-Begin user essntial edits.
+Begin user essential edits.
 Update the variables below for your personal use.
 """
 # These options are set for the size of my QSL card...change to your preference.
@@ -33,7 +33,7 @@ apiKeys = ['EXAMPLEKEY1',
            'EXAMPLEKEY2',
            'EXAMPLEKEY3']
 """
-End user essntial edits.
+End user essential edits.
 """
 wantedKeys = ['BAND', 'CALL', 'EMAIL', 'FREQ', 'MODE', 'NAME', 'QSO_DATE', 'RST_RCVD', 'TIME_OFF']
 try:
