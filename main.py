@@ -17,7 +17,7 @@ reduxqsos = []
 Begin user essential edits.
 Update the variables below for your personal use.
 """
-# These options are set for the size of my QSL card...change to your preference.
+# These options are set for the size of my QSL card...change to your preference/background image size.
 imgkitOptions = {
     'format': 'jpg',
     'crop-w': '1800',
