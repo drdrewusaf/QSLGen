@@ -13,6 +13,10 @@ from bs4 import BeautifulSoup
 
 qsos = []
 reduxqsos = []
+"""
+Begin user essntial edits.
+Update the variables below for your personal use.
+"""
 # These options are set for the size of my QSL card...change to your preference.
 imgkitOptions = {
     'format': 'jpg',
@@ -22,10 +26,15 @@ imgkitOptions = {
 }
 # PLace your calsign in the variable below.
 myCall = 'CALLSIGN'
+# Place your name in the variable below.
+myName = 'Name'
 # Place your QRZ.com logbook API keys, without dashes, in the apiKeys array variable below.
 apiKeys = ['EXAMPLEKEY1',
            'EXAMPLEKEY2',
            'EXAMPLEKEY3']
+"""
+End user essntial edits.
+"""
 wantedKeys = ['BAND', 'CALL', 'EMAIL', 'FREQ', 'MODE', 'NAME', 'QSO_DATE', 'RST_RCVD', 'TIME_OFF']
 try:
     dateSince = datetime.date.fromtimestamp(os.path.getmtime('Curr_QSLGen.html'))
@@ -124,7 +133,7 @@ for q in reduxqsos:
                      'Hope to hear you on the air again soon!\n\n\n'
                      '73,\n'
                      f'{myCall}\n'
-                     'Yourname\n\n'  # Place your name here.
+                     f'{myName}\n\n'
                      '*This email was automatically generated and sent using my QSLGen Python script: '
                      'https://github.com/drdrewusaf/QSLGen *')
         attachment = f'{os.getcwd()}\\{filenameQSLCard}'
