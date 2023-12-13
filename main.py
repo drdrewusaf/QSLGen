@@ -5,7 +5,6 @@ import re
 import adif_io
 import html2text
 import requests
-import splinter
 import win32com.client as win32
 # To use imgkit, you need to install wkhtmltopdf for your OS and add it to PATH.
 import imgkit
