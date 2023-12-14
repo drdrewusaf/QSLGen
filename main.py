@@ -24,7 +24,7 @@ imgkitOptions = {
     'crop-h': '1115',
     'enable-local-file-access':''  # Do not remove this option; it will cause imgkit/wkhtmltoimage failure.
 }
-# PLace your calsign in the variable below.
+# Place your calsign in the variable below.
 myCall = 'CALLSIGN'
 # Place your name in the variable below.
 myName = 'YourName'
@@ -136,11 +136,19 @@ for ak in apiKeys:
                     if keyCount < len(wantedAdifKeys) - 1:
                         keyCount += 1
             reduxqsos.append(curr_qso)
-
+    
+    # Array position reference: 0APP_QRZLOG_LOGID, 1BAND, 2CALL, 3EMAIL, 4EQSL_QSL_SENT,
+    # 5FREQ, 6MODE, 7NAME, 8QSO_DATE, 9RST_RCVD, 10TIME_OFF
     for q in reduxqsos:
-        # Array position reference: 0APP_QRZLOG_LOGID, 1BAND, 2CALL, 3EMAIL, 4EQSL_QSL_SENT,
-        # 5FREQ, 6MODE, 7NAME, 8QSO_DATE, 9RST_RCVD, 10TIME_OFF
-        if len(q[3]) > 0 and 'N' in q[4]:
+        if len(q[3]) <= 0 or 'Y' in q[4]:
+            del reduxqsos.q
+    dataLen = len(reduxqsos)
+    print(f'Ready to generate and email QSL cards for {dataLen} QSOs. Here is a list of Callsigns we will QSL:\n')
+    for q in reduxqsos:
+        print(f'{q[2]}, ')
+    yesno = input('Please confirm you want to send these QSL Cards (Y/N): ').lower
+    if 'y' in yesno or 'yes' in yesno:
+        for q in reduxqsos:
             # The HTML file below is the template for the QSL Card. Edit the file as you see fit.
             with open('QSLGen.html') as templateFile:
                 soup = BeautifulSoup(templateFile, 'html.parser')
@@ -157,7 +165,7 @@ for ak in apiKeys:
                 currQSL.write(str(soup))
             currQSL.close()
             filenameQSLCard = f'{q[2]} de {myCall}.jpg'
-            imgkit.from_file('Curr_QSLGen.html',filenameQSLCard, options=imgkitOptions)
+            imgkit.from_file('Curr_QSLGen.html', filenameQSLCard, options=imgkitOptions)
             print(f'Sending QSL card email to {q[2]}.')
             if " " in q[7]:
                 emailName = q[7].split(" ")[0]
@@ -168,44 +176,44 @@ for ak in apiKeys:
             mail.To = q[3]
             mail.Subject = f'QSL de {myCall}'
             mail.Body = (f'Good Day {emailName} ({q[2]})!\n\n'
-                         'Thank you for the QSO!  You will find my QSL card attached.  '
-                         'The QSO is logged on QRZ and LOTW.\n'
-                         'Hope to hear you on the air again soon!\n\n\n'
-                         '73,\n'
-                         f'{myCall}\n'
-                         f'{myName}\n\n'
-                         '* This email was automatically generated and sent using the QSLGen Python script '
-                         'by KF3OFP/DA6AJP: https://github.com/drdrewusaf/QSLGen *')
+                        'Thank you for the QSO!  You will find my QSL card attached.  '
+                        'The QSO is logged on QRZ and LOTW.\n'
+                        'Hope to hear you on the air again soon!\n\n\n'
+                        '73,\n'
+                        f'{myCall}\n'
+                        f'{myName}\n\n'
+                        '* This email was automatically generated and sent using the QSLGen Python script '
+                        'by KF3OFP/DA6AJP: https://github.com/drdrewusaf/QSLGen *')
             attachment = f'{os.getcwd()}\\{filenameQSLCard}'
             mail.Attachments.Add(attachment)
             mail.Send()
             print('Email sent.')
             print('Deleting QSL card.')
             os.remove(filenameQSLCard)
-            print('Updating QSO on QRZ.com to reflect eQSL sent.')
-            """
-            Because QRZ.com's API doesn't support updating QSOs, we have to work around/brute force it.
-            The qrzUpdater function uses selenium/webdriver to update your QSOs with eQSL sent data. 
-            Selenium/webdriver perform a macro of sorts - hopefully QRZ.com doesn't change their webpage.
-            """
-            qrzUpdater(reduxqsos)
-            """
-            The commented code below is hopeful replacement for webdriver if QRZ.com someday allows 
-            QSO updates via their API.
-            """
-            # postPayload = {'KEY': f'{ak}', 'ACTION': 'UPDATE',
-            #                'ADIF': f'<app_qrzlog_logid:9>{q[0]}<eqsl_qsl_sent:1>Y<eor>'}
-            # url = 'https://logbook.qrz.com/api'
-            # pr = requests.post(url, params=postPayload)
-            # if 'ERROR' in pr.text:
-            #     with open('log.txt', 'a') as log:
-            #         log.write(f'QRZ.com reported an error while updating the QSO id {q[0]} with callsign {q[2]}.\n'
-            #                   f'Here is the response:  {pr.text}\n'
-            #                   '***********\r\n')
-            #         log.close()
-            #     print(f'QRZ.com reported an error: {pr.text}')
-            # else:
-            #     print('QSO updated.')
-        else:
-            continue
+        print(f'Updating QSOs for API key {ak} on QRZ.com to reflect eQSL sent.')
+        """
+        Because QRZ.com's API doesn't support updating QSOs, we have to work around/brute force it.
+        The qrzUpdater function uses selenium/webdriver to update your QSOs with eQSL sent data. 
+        Selenium/webdriver perform a macro of sorts - hopefully QRZ.com doesn't change their webpage.
+        """
+        qrzUpdater(reduxqsos)
+        """
+        The commented code below is hopeful replacement for webdriver if QRZ.com someday allows 
+        QSO updates via their API.
+        """
+        # postPayload = {'KEY': f'{ak}', 'ACTION': 'UPDATE',
+        #                'ADIF': f'<app_qrzlog_logid:9>{q[0]}<eqsl_qsl_sent:1>Y<eor>'}
+        # url = 'https://logbook.qrz.com/api'
+        # pr = requests.post(url, params=postPayload)
+        # if 'ERROR' in pr.text:
+        #     with open('log.txt', 'a') as log:
+        #         log.write(f'QRZ.com reported an error while updating the QSO id {q[0]} with callsign {q[2]}.\n'
+        #                   f'Here is the response:  {pr.text}\n'
+        #                   '***********\r\n')
+        #         log.close()
+        #     print(f'QRZ.com reported an error: {pr.text}')
+        # else:
+        #     print('QSO updated.')
+    else:
+        continue
 exit(0)
