@@ -14,8 +14,8 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.select import Select
 
 """
-Begin user essential edits.
-Update the variables below for your personal use.
+Begin variables essential to the user.
+**You MUST update the variables below for your personal use.**
 """
 # These imgkit options are set for the size of my QSL card...change to your preference/background image size.
 imgkitOptions = {
@@ -97,7 +97,7 @@ for ak in apiKeys:
             log.write(f'API Key: {ak}\n'
                       f'Date since: {dateSince}\n'
                       f'Data: \n{data}'
-                      'Regex search failed. Probably no new confirmed QSOs.\n'
+                      'Regex search failed.\n'
                       '***********\n')
             log.close()
         if 'invalid api key' in data:
@@ -108,11 +108,7 @@ for ak in apiKeys:
     else:
         cursor = data_re[0]
         data = data[cursor:]
-        adifData = adif_io.read_from_string(data)[0]
-        if len(qsos) > 0:
-            qsos.append(adifData[0])
-        else:
-            qsos = adifData
+        qsos = adif_io.read_from_string(data)[0]
 
     dataLen = len(qsos)
     if dataLen <= 0:
@@ -124,16 +120,16 @@ for ak in apiKeys:
         print(f'No new confirmed QSOs for logbook API key {ak} since {dateSince}.')
         continue
     else:
-        for i in qsos:
+        for q in qsos:
             curr_qso = []
             keyCount = 0
-            for k in i:
-                if wantedAdifKeys[keyCount] not in i.keys():
+            for k in q:
+                if wantedAdifKeys[keyCount] not in q.keys():
                     curr_qso.append('')
                     if keyCount < len(wantedAdifKeys) - 1:
                         keyCount += 1
                 elif k in wantedAdifKeys[keyCount]:
-                    curr_qso.append(i[k])
+                    curr_qso.append(q[k])
                     if keyCount < len(wantedAdifKeys) - 1:
                         keyCount += 1
             reduxqsos.append(curr_qso)
@@ -145,15 +141,16 @@ for ak in apiKeys:
         if len(q[3]) <= 0 or 'Y' in q[4]:
             del reduxqsos[qsoCount]
             qsoCount += 1
-    dataLen = len(reduxqsos)
-    print(f'Ready to generate and email QSL cards for {dataLen} QSOs. Here is a list of callsigns we will QSL:')
+    reduxDataLen = len(reduxqsos)
+    print(f'Ready to generate and email QSL cards for {reduxDataLen} QSOs. Here is a list of callsigns we will QSL:')
     qsoCount = 0
     for q in reduxqsos:
-        if qsoCount == dataLen - 1:
+        if qsoCount == reduxDataLen - 1:
             print(f'{q[2]}')
         else:    
             print(f'{q[2]}, ',end='')
             qsoCount += 1
+    # Give the user a chance to cancel based on the data QSLGen plans to use.
     yesno = input('Please confirm you want to send these QSL Cards (Y/n): ').lower
     if yesno == 'y' or yesno == 'yes' or yesno == '':
         for q in reduxqsos:
