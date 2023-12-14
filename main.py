@@ -85,7 +85,7 @@ except FileNotFoundError:
 for ak in apiKeys:
     qsos = []
     reduxqsos = []
-    print(f'Gathering confimed QSOs since {dateSince} for logbook API key {ak}...')
+    print(f'\nGathering confimed QSOs since {dateSince} for logbook API key {ak}...')
     getPayload = {'KEY':f'{ak}', 'ACTION':'FETCH', 'OPTION': f'MODSINCE:{dateSince},STATUS:CONFIRMED'}
     url = 'https://logbook.qrz.com/api'
     gr = requests.get(url, params=getPayload)
@@ -104,7 +104,7 @@ for ak in apiKeys:
             print(f'Check your API Key. QRZ.com reported an invalid key.')
         else:
             print(f'Regex search failed. Probably no confirmed QSOs since {dateSince}.')
-        print(f'Here is the data the server returned: {data}')
+        print(f'Here is the data the server returned: {data}', end='')
     else:
         cursor = data_re[0]
         data = data[cursor:]
@@ -121,7 +121,8 @@ for ak in apiKeys:
                       f'No new confirmed QSOs since {dateSince}.\n'
                       '***********\r\n')
             log.close()
-        print(f'No new confirmed QSOs since {dateSince}.')
+        print(f'No new confirmed QSOs for logbook API key {ak} since {dateSince}.')
+        continue
     else:
         for i in qsos:
             curr_qso = []
@@ -139,15 +140,22 @@ for ak in apiKeys:
     
     # Array position reference: 0APP_QRZLOG_LOGID, 1BAND, 2CALL, 3EMAIL, 4EQSL_QSL_SENT,
     # 5FREQ, 6MODE, 7NAME, 8QSO_DATE, 9RST_RCVD, 10TIME_OFF
+    qsoCount = 0
     for q in reduxqsos:
         if len(q[3]) <= 0 or 'Y' in q[4]:
-            del reduxqsos.q
+            del reduxqsos[qsoCount]
+            qsoCount += 1
     dataLen = len(reduxqsos)
-    print(f'Ready to generate and email QSL cards for {dataLen} QSOs. Here is a list of Callsigns we will QSL:\n')
+    print(f'Ready to generate and email QSL cards for {dataLen} QSOs. Here is a list of callsigns we will QSL:')
+    qsoCount = 0
     for q in reduxqsos:
-        print(f'{q[2]}, ')
-    yesno = input('Please confirm you want to send these QSL Cards (Y/N): ').lower
-    if 'y' in yesno or 'yes' in yesno:
+        if qsoCount == dataLen - 1:
+            print(f'{q[2]}')
+        else:    
+            print(f'{q[2]}, ',end='')
+            qsoCount += 1
+    yesno = input('Please confirm you want to send these QSL Cards (Y/n): ').lower
+    if yesno == 'y' or yesno == 'yes' or yesno == '':
         for q in reduxqsos:
             # The HTML file below is the template for the QSL Card. Edit the file as you see fit.
             with open('QSLGen.html') as templateFile:
