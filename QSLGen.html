@@ -1,44 +1,103 @@
 <html>
 <head>
-<style>
-body {
-  background-image: url('QSL_bg.jpg');
-  background-position: 0px 0px;
-  background-repeat: no-repeat;
-  width: 1800px;
-  height: 1115px;
-}
-</style>
+	<style>
+		body {
+			background-position: 0px 0px;
+			background-repeat: no-repeat;
+			width: 1800px;
+			height: 1115px;
+		}
+		h1 {
+			color: orange;
+			text-shadow: 10px 8px 5px black;
+			font-family: 'Segoe UI';
+			font-size: 150px;
+			font-weight: bolder;
+			height: 90px;
+			padding-left: 70;
+		}
+		h2 {
+			color: black;
+			font-family: 'Segoe UI';
+			font-size: 30px;
+			font-weight: bold;
+			padding-left: 100;
+		}
+		h2 span {
+			background-color: lightsteelblue;
+			box-shadow: 8px 6px 4px black;
+			border-radius: 15px;
+			padding-left: 5px;
+			padding-right: 5px;
+			padding-bottom: 5px;
+		}
+		h3 {
+			color: white;
+			text-shadow: 2px 2px 2px black;
+			font-family: Courier;
+			font-size: 30px;
+			text-align: center;
+		}
+		table {
+			color: black;
+			margin-top: 730px;
+			margin-left: 150px;
+			width: 1500px;
+			background-color: white;
+			text-align: center;
+			border: 1px solid;
+		}
+		table th {
+			font-family: Courier;
+			font-size: 28px;
+			font-weight: bolder;
+			border: 1px solid;
+		}
+		table td,
+		tr {
+			font-family: Courier;
+			font-size: 24px;
+			border: 1px solid;
+		}
+	</style>
 </head>
-<body>
-<p align="center" style="color:white; font-family:courier; font-size:200%">
-<table border="2" cellpadding="1" cellspacing="0" align="center" style="color:black; font-family:courier; font-size:75%; margin-top:1000px; margin-left:150px; width:1500px; background-color:white">
-	<thead>
-		<tr align="center">
-			<th scope="col">Callsign</th>			
-			<th scope="col">Date (Year-Month-Day)</th>
-			<th scope="col">Time (UTC)</th>
-			<th scope="col">Band</th>
-			<th scope="col">Frequency</th>
-			<th scope="col">Mode</th>
-			<th scope="col">Report</th>
-		</tr>
-	</thead>
-	<tbody>
-		<tr align="center">
-			<!--Array pos ref: 0APP_QRZLOG_LOGID, 1BAND, 2CALL, 3EMAIL, 4EQSL_QSL_SENT, 5FREQ, 6MODE,
-			7NAME, 8QSO_DATE, 9RST_RCVD, 10TIME_OFF-->
-			<td id="2">2call</td>
-			<td id="8">8date</td>
-			<td id="10">10time</td>
-			<td id="1">1band</td>
-			<td id="5">5freq</td>
-			<td id="6">6mode</td>
-			<td id="9">9rprt</td>
-		</tr>
-	</tbody>
-</table>
-<b>Thanks for the QSO! 73 de </b>
-</p>
+<!--The background image tag uses the local station callsign as determined by the QSO being processed.
+	Make sure you create an image for each callsign/logbook.-->
+
+<body style="background-image: url('CALLSIGN_bg.jpg');">
+	<!--As with the background image above, the callsign below is determined by the QSO being processed.-->
+	<h1 id="call">CALLSIGN</h1>
+	<!--The local station info below is determined by the QSO being processed.-->
+	<h2><span id="localStation">City, Country Gridsquare</span></h2>
+	<table>
+		<thead>
+			<tr>
+				<th scope="col">Callsign</th>
+				<th scope="col">Date (Year-Month-Day)</th>
+				<th scope="col">Time (UTC)</th>
+				<th scope="col">Band</th>
+				<th scope="col">Frequency</th>
+				<th scope="col">Mode</th>
+				<th scope="col">Report</th>
+			</tr>
+		</thead>
+		<tbody>
+			<tr>
+				<!--Array pos ref: 0APP_QRZLOG_LOGID, 1BAND, 2CALL, 3EMAIL, 4EQSL_QSL_SENT,
+    				5FREQ, 6MODE, 7MY_CITY, 8MY_COUNTRY, 9MY_GRIDSQUARE, 10NAME, 11QSO_DATE, 
+    				12RST_RCVD, 13STATION_CALLSIGN, 14TIME_OFF-->
+				<td id="2">2call</td>
+				<td id="11">11date</td>
+				<td id="14">14time</td>
+				<td id="1">1band</td>
+				<td id="5">5freq</td>
+				<td id="6">6mode</td>
+				<td id="12">12rprt</td>
+			</tr>
+		</tbody>
+	</table>
+	<!--The line below will include the local station callsign as determined by the QSO being processed.-->
+	<h3>Thanks for the QSO! 73 de </h3>
 </body>
+
 </html>
