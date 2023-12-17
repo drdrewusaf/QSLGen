@@ -42,7 +42,7 @@ End user essential edits.
 
 def qrzUpdater(qsoData):
     """
-    Because QRZ.com's API doesn't support updating QSOs, we have to work around/brute force it.
+    Because I haven't found out how to use QRZ.com's API to update QSOs, I've made this workaround.
     This function uses selenium/webdriver to update your QSO's eQSL field to "Yes" and the date to
     the date the script is run. Selenium/webdriver perform a macro of sorts - hopefully QRZ.com
     doesn't change their webpage - so be prepared for your web browser to open and surf QRZ.com
@@ -231,14 +231,14 @@ for ak in apiKeys:
             os.remove(filenameQSLCard)
         print(f'Updating QSOs for API key {ak} on QRZ.com to reflect eQSL sent.')
         """
-        Because QRZ.com's API doesn't support updating QSOs, we have to work around/brute force it.
+        Because I haven't found out how to use QRZ.com's API to update QSOs, I've made this workaround.
         The qrzUpdater function uses selenium/webdriver to update your QSOs with eQSL sent data.
         Selenium/webdriver perform a macro of sorts - hopefully QRZ.com doesn't change their webpage.
         """
         qrzUpdater(reduxqsos)
         """
-        The commented code below is hopeful replacement for webdriver if QRZ.com someday allows
-        QSO updates via their API.
+        The commented code below is hopeful replacement for webdriver if QRZ.com someday tells me how
+        to update QSOs via their API.
         """
         # postPayload = {'KEY': f'{ak}', 'ACTION': 'UPDATE',
         #                'ADIF': f'<app_qrzlog_logid:9>{q[0]}<eqsl_qsl_sent:1>Y<eor>'}
