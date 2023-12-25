@@ -39,7 +39,6 @@ apiKeys = ['EXAMPLEKEY1',
 End user essential edits.
 """
 
-
 def qrzUpdater(qsoData):
     """
     Because I haven't found out how to use QRZ.com's API to update QSOs, I've made this workaround.
@@ -55,6 +54,9 @@ def qrzUpdater(qsoData):
     driver = webdriver.Chrome(options=options)
     for qd in qsoData:
         driver.get('https://logbook.qrz.com/logbook')
+        logBook = driver.find_element(By.ID, value="bookselect").accessible_name
+        if callLocalSlash not in logBook:
+            Select(driver.find_element(By.ID, value="bookselect")).select_by_visible_text(callLocalSlash + ' Logbook')
         driver.find_element(By.ID, value="search").send_keys(str(qd[0]))
         driver.find_element(By.ID, value='findBtn').click()
         driver.find_element(By.CLASS_NAME, value='lrow').click()
@@ -83,6 +85,14 @@ def underScoreCheck(ixCall):
     else:
         return (ixCall)
     return (ixCall)
+
+
+def logWriter(message, end=True):
+    with open('log.txt', 'a') as log:
+        log.write(f'{message}\n')
+        if end:
+            log.write('***********\n')
+        log.close()
 
 
 # These are the dictionary keys in the ADIF data we want to work with (QRZ sends many others)
@@ -116,17 +126,17 @@ for ak in apiKeys:
     try:
         data_re = re.search('<', data).span()
     except:
-        with open('log.txt', 'a') as log:
-            log.write(f'API Key: {ak}\n'
-                      f'Date since: {dateSince}\n'
-                      f'Data: \n{data}'
-                      'Regex search failed.\n'
-                      '***********\n')
-            log.close()
         if 'invalid api key' in data:
-            print(f'Check your API Key. QRZ.com reported an invalid key.')
+            logWriter('Check your API Key. QRZ.com reported an invalid key.', end=False)
+            print('Check your API Key. QRZ.com reported an invalid key.')
         else:
+            logWriter('Regex search failed. Probably no confirmed QSOs since {dateSince}.\n'
+                      f'API key: {ak}\n'
+                      f'dateSince: {dateSince}\n'
+                      f'data: {data}\n',
+                      end=False)
             print(f'Regex search failed. Probably no confirmed QSOs since {dateSince}.')
+        logWriter('')
         print(f'Here is the data the server returned: {data}', end='')
         continue
     else:
@@ -136,12 +146,6 @@ for ak in apiKeys:
 
     dataLen = len(qsos)
     if dataLen <= 0:
-        with open('log.txt', 'a') as log:
-            log.write(f'Length of data is {dataLen}.\n'
-                      f'No new confirmed QSOs since {dateSince}.\n'
-                      '***********\r\n')
-            log.close()
-        print(f'No new confirmed QSOs for logbook API key {ak} since {dateSince}.')
         continue
     else:
         for q in qsos:
@@ -173,6 +177,14 @@ for ak in apiKeys:
         else:
             qsoCount += 1
     reduxDataLen = len(reduxqsos)
+    if reduxDataLen <= 0:
+        logWriter(f'Length of reduced data is {dataLen}.\n'
+                  f'If there are any new confirmed QSOs since {dateSince},\n'
+                  f'they likely do not have a public email address.',
+                  end=True)
+        print(f'If there are any new confirmed QSOs since {dateSince}, they likely do not '
+              f'have a public email address.')
+        continue
     print(f'Ready to generate and email QSL cards for {reduxDataLen} QSOs.\n'
           'Here is a list of callsigns we will QSL:')
     qsoCount = 0
@@ -210,6 +222,7 @@ for ak in apiKeys:
             imgkit.from_file('Curr_QSLGen.html', f'{filenameQSLCard}', options=imgkitOptions)
             print(f'Sending QSL card email to {q[2]}.')
             emailName = q[10].title()
+            # Outlook needs to be opened by the user first
             outlook = win32.Dispatch('outlook.application')
             mail = outlook.CreateItem(0)
             mail.To = q[3]
@@ -240,7 +253,7 @@ for ak in apiKeys:
         The commented code below is hopeful replacement for webdriver if QRZ.com someday tells me how
         to update QSOs via their API.
         """
-        # postPayload = {'KEY': f'{ak}', 'ACTION': 'UPDATE',
+        # postPayload = {'KEY': f'{ak}', 'ACTION': 'INSERT',
         #                'ADIF': f'<app_qrzlog_logid:9>{q[0]}<eqsl_qsl_sent:1>Y<eor>'}
         # url = 'https://logbook.qrz.com/api'
         # pr = requests.post(url, params=postPayload)
