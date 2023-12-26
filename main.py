@@ -213,7 +213,7 @@ for ak in apiKeys:
                     idCount += 1
             soup.find_all(id='call')[0].string.replaceWith(q[13])
             soup.find_all(id='localStation')[0].string.replaceWith(f'{q[7]}, {q[8]}  {q[9]}')
-            soup.h3.string.replaceWith(f'Thanks for the QSO! 73 de {q[13]}')
+            soup.find_all(id='thanks')[0].string.replaceWith(f'Thanks for the QSO! 73 de {q[13]}')
             soup.body['style'] = f"background-image: url('{callLocalUnderscore}_bg.jpg');"
             with open('Curr_QSLGen.html', 'w') as currQSL:
                 currQSL.write(str(soup))

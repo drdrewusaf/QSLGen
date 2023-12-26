@@ -1,4 +1,5 @@
-<html>
+<!doctype html>
+<html lang="en">
 <head>
 	<style>
 		body {
@@ -7,23 +8,24 @@
 			width: 1800px;
 			height: 1115px;
 		}
-		h1 {
+		#call {
 			color: orange;
 			text-shadow: 10px 8px 5px black;
 			font-family: 'Segoe UI';
 			font-size: 150px;
 			font-weight: bolder;
 			height: 90px;
-			padding-left: 70;
+			padding-left: 70px;
 		}
-		h2 {
+		#localStation {
 			color: black;
 			font-family: 'Segoe UI';
 			font-size: 30px;
 			font-weight: bold;
-			padding-left: 100;
+			margin-top: 90px;
+			padding-left: 100px;
 		}
-		h2 span {
+		#localStation span {
 			background-color: lightsteelblue;
 			box-shadow: 8px 6px 4px black;
 			border-radius: 15px;
@@ -31,16 +33,17 @@
 			padding-right: 5px;
 			padding-bottom: 5px;
 		}
-		h3 {
+		#thanks {
 			color: white;
 			text-shadow: 2px 2px 2px black;
 			font-family: Courier;
+			font-weight: bolder;
 			font-size: 30px;
 			text-align: center;
 		}
 		table {
 			color: black;
-			margin-top: 730px;
+			margin-top: 775px;
 			margin-left: 150px;
 			width: 1500px;
 			background-color: white;
@@ -60,14 +63,15 @@
 			border: 1px solid;
 		}
 	</style>
+	<title>QSLGen QSL Card Template</title>
 </head>
 <!--The background image tag uses the local station callsign as determined by the QSO being processed.
 	Make sure you create an image for each callsign/logbook.-->
 <body style="background-image: url('CALLSIGN_bg.jpg');">
 	<!--As with the background image above, the callsign below is determined by the QSO being processed.-->
-	<h1 id="call">CALLSIGN</h1>
+	<div id="call">CALLSIGN</div>
 	<!--The local station info below is determined by the QSO being processed.-->
-	<h2><span id="localStation">City, Country Gridsquare</span></h2>
+	<div id="localStation"><span>City, Country Gridsquare</span></div>
 	<table>
 		<thead>
 			<tr>
@@ -96,7 +100,7 @@
 		</tbody>
 	</table>
 	<!--The line below will include the local station callsign as determined by the QSO being processed.-->
-	<h3>Thanks for the QSO! 73 de </h3>
+	<div id="thanks">Thanks for the QSO! 73 de </div>
 </body>
 
 </html>
