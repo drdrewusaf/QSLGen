@@ -2,6 +2,10 @@
 <html lang="en">
 <head>
 	<style>
+		* {
+		margin: 0;
+		padding: 0;
+		}
 		body {
 			background-position: 0px 0px;
 			background-repeat: no-repeat;
@@ -10,12 +14,12 @@
 		}
 		#call {
 			color: orange;
-			text-shadow: 10px 8px 5px black;
 			font-family: 'Segoe UI';
 			font-size: 150px;
 			font-weight: bolder;
 			height: 90px;
 			padding-left: 70px;
+			text-shadow: 10px 8px 5px black;
 		}
 		#localStation {
 			color: black;
@@ -27,40 +31,39 @@
 		}
 		#localStation span {
 			background-color: lightsteelblue;
-			box-shadow: 8px 6px 4px black;
+			border: 3px solid black;
 			border-radius: 15px;
-			padding-left: 5px;
-			padding-right: 5px;
-			padding-bottom: 5px;
+			box-shadow: 8px 6px 4px black;
+			padding: 0px 5px 5px 5px;
 		}
 		#thanks {
 			color: white;
-			text-shadow: 2px 2px 2px black;
 			font-family: Courier;
-			font-weight: bolder;
 			font-size: 30px;
+			font-weight: bolder;
+			padding-top: 10px;
 			text-align: center;
+			text-shadow: 2px 2px 2px black;
 		}
 		table {
+			background-color: white;
+			border: 1px solid;
 			color: black;
 			margin-top: 775px;
 			margin-left: 150px;
 			width: 1500px;
-			background-color: white;
 			text-align: center;
-			border: 1px solid;
 		}
 		table th {
+			border: 1px solid;
 			font-family: Courier;
 			font-size: 28px;
 			font-weight: bolder;
-			border: 1px solid;
 		}
-		table td,
-		tr {
+		table td, tr {
+			border: 1px solid black;
 			font-family: Courier;
 			font-size: 24px;
-			border: 1px solid;
 		}
 	</style>
 	<title>QSLGen QSL Card Template</title>
