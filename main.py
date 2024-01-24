@@ -76,11 +76,14 @@ except FileNotFoundError:
 
 # Iterate through the user's API keys.
 for ak in apiKeys:
-    today = str(datetime.date.today()).replace('-','')
+    today = str(datetime.date.today()).replace('-', '')
     qsos = []
     reduxqsos = []
     print(f'\nGathering confimed QSOs since {dateSince} for logbook API key {ak}...')
-    getPayload = {'KEY': f'{ak}', 'ACTION': 'FETCH', 'OPTION': f'MODSINCE:{dateSince},STATUS:CONFIRMED'}
+    getPayload = {'KEY': f'{ak}',
+                  'ACTION': 'FETCH',
+                  'OPTION': f'MODSINCE:{dateSince},STATUS:CONFIRMED'}
+
     url = 'https://logbook.qrz.com/api'
     fetchResponse = requests.get(url, params=getPayload)
     # To fix errors in reading special characters, convert to ascii
@@ -210,17 +213,20 @@ for ak in apiKeys:
             # Array position reference again: 0APP_QRZLOG_LOGID, 1BAND, 2CALL, 3EMAIL, 4EQSL_QSL_SENT,
             # 5FREQ, 6MODE, 7MY_CITY, 8MY_COUNTRY, 9MY_GRIDSQUARE, 10NAME, 11QSO_DATE,
             # 12RST_RCVD, 13STATION_CALLSIGN, 14TIME_ON
-            updatePayload = {'KEY': f'{ak}', 'ACTION': 'INSERT', 'OPTION': 'REPLACE',
-                           'ADIF': f'<band:{len(q[1])}>{q[1]}'
-                                   f'<mode:{len(q[6])}>{q[6]}'
-                                   f'<freq:{len(q[5])}>{q[5]}'
-                                   f'<call:{len(q[2])}>{q[2]}'
-                                   f'<qso_date:{len(q[11])}>{q[11]}'
-                                   f'<station_callsign:{len(q[13])}>{q[13]}'
-                                   f'<time_on:{len(q[14])}>{q[14]}'
-                                   f'<eqsl_qsl_sent:1>Y'
-                                   f'<eqsl_qslsdate:{len(today)}>{today}'
-                                   f'<eor>'}
+            updatePayload = {'KEY': f'{ak}',
+                             'ACTION': 'INSERT',
+                             'OPTION': 'REPLACE',
+                             'ADIF': f'<band:{len(q[1])}>{q[1]}'
+                                     f'<mode:{len(q[6])}>{q[6]}'
+                                     f'<freq:{len(q[5])}>{q[5]}'
+                                     f'<call:{len(q[2])}>{q[2]}'
+                                     f'<qso_date:{len(q[11])}>{q[11]}'
+                                     f'<station_callsign:{len(q[13])}>{q[13]}'
+                                     f'<time_on:{len(q[14])}>{q[14]}'
+                                     f'<eqsl_qsl_sent:1>Y'
+                                     f'<eqsl_qslsdate:{len(today)}>{today}'
+                                     f'<eor>'}
+
             url = 'https://logbook.qrz.com/api'
             insertResponse = requests.get(url, params=updatePayload)
             if 'REPLACE' not in insertResponse.text:
