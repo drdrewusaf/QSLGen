@@ -1,7 +1,6 @@
 import datetime
 import os
 import re
-import time
 
 import adif_io
 import html2text
@@ -10,9 +9,6 @@ import imgkit
 import requests
 import win32com.client as win32
 from bs4 import BeautifulSoup
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support.select import Select
 
 """
 Begin variables essential to the user.
@@ -27,49 +23,15 @@ imgkitOptions = {
 }
 # Place your name in the variable below for the email signature.
 myName = 'YourName'
-# Place the full path to your browser's user data into the variable below.
-# Only use a browser with an active login session on QRZ.com!
-# Chrome example: C:\\Users\\*YourUsername*\\AppData\\Local\\Google\\Chrome\\User Data
-browserUserDataDir = 'C:\\Path\\To\\Users\\Browser\\Data'
+
 # Place your QRZ.com logbook API keys, without dashes, in the apiKeys array variable below.
 apiKeys = ['EXAMPLEKEY1',
            'EXAMPLEKEY2',
            'EXAMPLEKEY3']
+
 """
 End user essential edits.
 """
-
-def qrzUpdater(qsoData):
-    """
-    Because I haven't found out how to use QRZ.com's API to update QSOs, I've made this workaround.
-    This function uses selenium/webdriver to update your QSO's eQSL field to "Yes" and the date to
-    the date the script is run. Selenium/webdriver perform a macro of sorts - hopefully QRZ.com
-    doesn't change their webpage - so be prepared for your web browser to open and surf QRZ.com
-    for a bit.
-    ***IMPORTANT:  I've used Chrome here, but you should use whichever browser you use with an
-    *active login session* on QRZ.com.
-    """
-    options = webdriver.ChromeOptions()
-    options.add_argument(f'user-data-dir={browserUserDataDir}')
-    driver = webdriver.Chrome(options=options)
-    for qd in qsoData:
-        driver.get('https://logbook.qrz.com/logbook')
-        logBook = driver.find_element(By.ID, value="bookselect").accessible_name
-        if callLocalSlash not in logBook:
-            Select(driver.find_element(By.ID, value="bookselect")).select_by_visible_text(callLocalSlash + ' Logbook')
-        driver.find_element(By.ID, value="search").send_keys(str(qd[0]))
-        driver.find_element(By.ID, value='findBtn').click()
-        driver.find_element(By.CLASS_NAME, value='lrow').click()
-        driver.find_element(By.ID, value='nav').click()
-        driver.find_element(By.ID, value='osel').click()
-        driver.find_element(By.ID, value='abut').click()
-        driver.find_element(By.CLASS_NAME, value='btn.btn-sm.btn-secondary').click()
-        driver.find_element(By.PARTIAL_LINK_TEXT, value='QSL').click()
-        Select(driver.find_element(By.ID, value='eqsl_sent')).select_by_value('Y')
-        driver.find_element(By.ID, value='eqsl_sdate').send_keys(str(datetime.date.today()))
-        driver.find_element(By.ID, value='savebut').click()
-        time.sleep(5)
-    driver.quit()
 
 
 def underScoreCheck(ixCall):
@@ -98,7 +60,7 @@ def logWriter(message, end=True):
 # These are the dictionary keys in the ADIF data we want to work with (QRZ sends many others)
 wantedAdifKeys = ['APP_QRZLOG_LOGID', 'BAND', 'CALL', 'EMAIL', 'EQSL_QSL_SENT',
                   'FREQ', 'MODE', 'MY_CITY', 'MY_COUNTRY', 'MY_GRIDSQUARE', 'NAME',
-                  'QSO_DATE', 'RST_RCVD', 'STATION_CALLSIGN', 'TIME_OFF']
+                  'QSO_DATE', 'RST_RCVD', 'STATION_CALLSIGN', 'TIME_ON']
 
 try:
     dateSince = datetime.date.fromtimestamp(os.path.getmtime('Curr_QSLGen.html'))
@@ -114,6 +76,7 @@ except FileNotFoundError:
 
 # Iterate through the user's API keys.
 for ak in apiKeys:
+    today = str(datetime.date.today())
     qsos = []
     reduxqsos = []
     print(f'\nGathering confimed QSOs since {dateSince} for logbook API key {ak}...')
@@ -169,7 +132,7 @@ for ak in apiKeys:
 
     # Array position reference: 0APP_QRZLOG_LOGID, 1BAND, 2CALL, 3EMAIL, 4EQSL_QSL_SENT,
     # 5FREQ, 6MODE, 7MY_CITY, 8MY_COUNTRY, 9MY_GRIDSQUARE, 10NAME, 11QSO_DATE,
-    # 12RST_RCVD, 13STATION_CALLSIGN, 14TIME_OFF
+    # 12RST_RCVD, 13STATION_CALLSIGN, 14TIME_ON
     qsoCount = 0
     while qsoCount < len(reduxqsos):
         if len(reduxqsos[qsoCount][3]) <= 0 or 'Y' in reduxqsos[qsoCount][4]:
@@ -195,7 +158,8 @@ for ak in apiKeys:
             print(f'{q[2]}, ', end='')
             qsoCount += 1
     # Give the user a chance to cancel based on the data QSLGen plans to use.
-    yesno = input('Please confirm you want to send these QSL Cards (Y/n): ').lower()
+    yesno = input('Please confirm you want to send these QSL Cards *AND*\n'
+                  'the Outlook desktop application is open. (Y/n): ').lower()
     if yesno == 'y' or yesno == 'yes' or not yesno:
         for q in reduxqsos:
             callLocalUnderscore = underScoreCheck(q[13])
@@ -242,33 +206,43 @@ for ak in apiKeys:
             print('Email sent.')
             print('Deleting QSL card.')
             os.remove(filenameQSLCard)
-        print(f'Updating QSOs for API key {ak} on QRZ.com to reflect eQSL sent.')
-        """
-        Because I haven't found out how to use QRZ.com's API to update QSOs, I've made this workaround.
-        The qrzUpdater function uses selenium/webdriver to update your QSOs with eQSL sent data.
-        Selenium/webdriver perform a macro of sorts - hopefully QRZ.com doesn't change their webpage.
-        """
-        qrzUpdater(reduxqsos)
-        """
-        The commented code below is hopeful replacement for webdriver if QRZ.com someday tells me how
-        to update QSOs via their API.
-        """
-        # postPayload = {'KEY': f'{ak}', 'ACTION': 'INSERT',
-        #                'ADIF': f'<app_qrzlog_logid:9>{q[0]}<eqsl_qsl_sent:1>Y<eor>'}
-        # url = 'https://logbook.qrz.com/api'
-        # pr = requests.post(url, params=postPayload)
-        # if 'ERROR' in pr.text:
-        #     with open('log.txt', 'a') as log:
-        #         log.write(f'QRZ.com reported an error while updating the QSO id {q[0]} with callsign {q[2]}.\n'
-        #                   f'Here is the response:  {pr.text}\n'
-        #                   '***********\r\n')
-        #         log.close()
-        #     print(f'QRZ.com reported an error: {pr.text}')
-        # else:
-        #     print('QSO updated.')
-    else:
+            print(f'Updating QSO on QRZ.com to reflect eQSL sent.')
+            # Array position reference again: 0APP_QRZLOG_LOGID, 1BAND, 2CALL, 3EMAIL, 4EQSL_QSL_SENT,
+            # 5FREQ, 6MODE, 7MY_CITY, 8MY_COUNTRY, 9MY_GRIDSQUARE, 10NAME, 11QSO_DATE,
+            # 12RST_RCVD, 13STATION_CALLSIGN, 14TIME_ON
+            postPayload = {'KEY': f'{ak}', 'ACTION': 'INSERT', 'OPTION': 'REPLACE',
+                           'ADIF': f'<band:{len(q[1])}>{q[1]}'
+                                   f'<mode:{len(q[6])}>{q[6]}'
+                                   f'<freq:{len(q[5])}>{q[5]}'
+                                   f'<call:{len(q[2])}>{q[2]}'
+                                   f'<qso_date:{len(q[11])}>{q[11]}'
+                                   f'<station_callsign:{len(q[13])}>{q[13]}'
+                                   f'<time_on:{len(q[14])}>{q[14]}'
+                                   f'<eqsl_qsl_sent:1>Y'
+                                   f'<eqsl_qslsdate:{len(today)}>{today}'
+                                   f'<eor>'}
+            url = 'https://logbook.qrz.com/api'
+            pr = requests.post(url, params=postPayload)
+            if 'FAIL' in pr.text:
+                with open('log.txt', 'a') as log:
+                    logWriter(f'QRZ.com reported an error while updating the QSO'
+                              f' with callsign {q[2]}.\n'
+                              f'Here is the response:  {pr.text}\n',
+                              end=True)
+                print(f'QRZ.com reported an error: {pr.text}')
+            else:
+                print('QRZ.com QSO updated.')
+    elif yesno == 'n' or yesno == 'no':
+        print('You have declined to send the QSLs listed above.\n')
+        if len(apiKeys) > 1:
+            print('Moving on to the next API key.')
         continue
-print('QSLGen finished sending and updating QSLs with all confirmed QSOs since\n'
+    else:
+        # FIXME: this just moves on, but should give the user another chance
+        print('Invalid input.')
+        continue
+
+print('QSLGen finished sending and updating okayed QSLs for all confirmed QSOs since\n'
       f'{dateSince} using the provided API keys.\n'
       'You should check your email sent items and QRZ.com to ensure everything\n'
       'processed as expected.')
