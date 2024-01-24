@@ -24,7 +24,7 @@ imgkitOptions = {
 # Place your name in the variable below for the email signature.
 myName = 'YourName'
 
-# Place your QRZ.com logbook API keys, without dashes, in the apiKeys array variable below.
+# Place your QRZ.com logbook API keys, in the apiKeys array variable below.
 apiKeys = ['EXAMPLEKEY1',
            'EXAMPLEKEY2',
            'EXAMPLEKEY3']
@@ -76,16 +76,16 @@ except FileNotFoundError:
 
 # Iterate through the user's API keys.
 for ak in apiKeys:
-    today = str(datetime.date.today())
+    today = str(datetime.date.today()).replace('-','')
     qsos = []
     reduxqsos = []
     print(f'\nGathering confimed QSOs since {dateSince} for logbook API key {ak}...')
     getPayload = {'KEY': f'{ak}', 'ACTION': 'FETCH', 'OPTION': f'MODSINCE:{dateSince},STATUS:CONFIRMED'}
     url = 'https://logbook.qrz.com/api'
-    gr = requests.get(url, params=getPayload)
+    fetchResponse = requests.get(url, params=getPayload)
     # To fix errors in reading special characters, convert to ascii
-    gr.encoding = 'ascii'
-    data = html2text.html2text(gr.text)
+    fetchResponse.encoding = 'ascii'
+    data = html2text.html2text(fetchResponse.text)
     try:
         data_re = re.search('<', data).span()
     except:
@@ -210,7 +210,7 @@ for ak in apiKeys:
             # Array position reference again: 0APP_QRZLOG_LOGID, 1BAND, 2CALL, 3EMAIL, 4EQSL_QSL_SENT,
             # 5FREQ, 6MODE, 7MY_CITY, 8MY_COUNTRY, 9MY_GRIDSQUARE, 10NAME, 11QSO_DATE,
             # 12RST_RCVD, 13STATION_CALLSIGN, 14TIME_ON
-            postPayload = {'KEY': f'{ak}', 'ACTION': 'INSERT', 'OPTION': 'REPLACE',
+            updatePayload = {'KEY': f'{ak}', 'ACTION': 'INSERT', 'OPTION': 'REPLACE',
                            'ADIF': f'<band:{len(q[1])}>{q[1]}'
                                    f'<mode:{len(q[6])}>{q[6]}'
                                    f'<freq:{len(q[5])}>{q[5]}'
@@ -222,14 +222,14 @@ for ak in apiKeys:
                                    f'<eqsl_qslsdate:{len(today)}>{today}'
                                    f'<eor>'}
             url = 'https://logbook.qrz.com/api'
-            pr = requests.post(url, params=postPayload)
-            if 'FAIL' in pr.text:
+            insertResponse = requests.get(url, params=updatePayload)
+            if 'REPLACE' not in insertResponse.text:
                 with open('log.txt', 'a') as log:
                     logWriter(f'QRZ.com reported an error while updating the QSO'
                               f' with callsign {q[2]}.\n'
-                              f'Here is the response:  {pr.text}\n',
+                              f'Here is the response:  {insertResponse.text}\n',
                               end=True)
-                print(f'QRZ.com reported an error: {pr.text}')
+                print(f'QRZ.com reported an error: {insertResponse.text}')
             else:
                 print('QRZ.com QSO updated.')
     elif yesno == 'n' or yesno == 'no':
