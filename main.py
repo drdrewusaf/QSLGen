@@ -120,7 +120,7 @@ def generateQSLs(reduxqsos):
         print(f'Updating QSO on QRZ.com to reflect eQSL sent.')
         # Array position reference again: 0APP_QRZLOG_LOGID, 1BAND, 2CALL, 3EMAIL, 4EQSL_QSL_SENT,
         # 5FREQ, 6MODE, 7MY_CITY, 8MY_COUNTRY, 9MY_GRIDSQUARE, 10NAME, 11QSO_DATE,
-        # 12RST_RCVD, 13STATION_CALLSIGN, 14TIME_ON
+        # 12RST_RCVD, 13STATION_CALLSIGN, 14TIME_ON, 15RST_SENT, 16TX_PWR, 17COMMENT, 18NOTES
         updatePayload = {'KEY': f'{ak}',
                          'ACTION': 'INSERT',
                          'OPTION': 'REPLACE',
@@ -130,7 +130,10 @@ def generateQSLs(reduxqsos):
                                  f'<call:{len(q[2])}>{q[2]}'
                                  f'<qso_date:{len(q[11])}>{q[11]}'
                                  f'<station_callsign:{len(q[13])}>{q[13]}'
-                                 f'<time_on:{len(q[14])}>{q[14]}'
+                                 f'<rst_sent:{len(q[15])}>{q[15]}'
+                                 f'<tx_pwr:{len(q[16])}>{q[16]}'
+                                 f'<comment:{len(q[17])}>{q[17]}'
+                                 f'<notes:{len(q[18])}>{q[18]}'
                                  f'<eqsl_qsl_sent:1>Y'
                                  f'<eqsl_qslsdate:{len(today)}>{today}'
                                  f'<eor>'}
@@ -261,7 +264,8 @@ mainMenu()
 # These are the dictionary keys in the ADIF data we want to work with (QRZ sends many others)
 wantedAdifKeys = ['APP_QRZLOG_LOGID', 'BAND', 'CALL', 'EMAIL', 'EQSL_QSL_SENT',
                   'FREQ', 'MODE', 'MY_CITY', 'MY_COUNTRY', 'MY_GRIDSQUARE', 'NAME',
-                  'QSO_DATE', 'RST_RCVD', 'STATION_CALLSIGN', 'TIME_ON']
+                  'QSO_DATE', 'RST_RCVD', 'STATION_CALLSIGN', 'TIME_ON', 'RST_SENT', 'TX_PWR',
+                  'COMMENT', 'NOTES']
 
 try:
     dateSince = datetime.date.fromtimestamp(os.path.getmtime('Curr_QSLGen.html'))
@@ -342,7 +346,7 @@ for ak in apiKeys:
 
     # Array position reference: 0APP_QRZLOG_LOGID, 1BAND, 2CALL, 3EMAIL, 4EQSL_QSL_SENT,
     # 5FREQ, 6MODE, 7MY_CITY, 8MY_COUNTRY, 9MY_GRIDSQUARE, 10NAME, 11QSO_DATE,
-    # 12RST_RCVD, 13STATION_CALLSIGN, 14TIME_ON
+    # 12RST_RCVD, 13STATION_CALLSIGN, 14TIME_ON, 15RST_SENT, 16TX_PWR, 17COMMENT, 18NOTES
     qsoCount = 0
     while qsoCount < len(reduxqsos):
         if len(reduxqsos[qsoCount][3]) <= 0 or 'Y' in reduxqsos[qsoCount][4]:
