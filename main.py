@@ -22,7 +22,7 @@ imgkitOptions = {
     'enable-local-file-access': ''  # Do not remove this option; it will cause imgkit/wkhtmltoimage failure.
 }
 # Place your name in the variable below for the email signature.
-myName = 'YourName'
+myName = 'Your Name'
 
 """
 End user essential edits.
@@ -69,6 +69,30 @@ def askToGenerate():
             print('Invalid input.')
             yesno = ''
     return (yesno)
+
+
+def payloadAdifSelector(qsodata):
+    payloadAdifKeys = {1: 'band',
+                       2: 'call',
+                       5: 'freq',
+                       6: 'mode',
+                       11: 'qso_date',
+                       13: 'station_callsign',
+                       14: 'time_on',
+                       15: 'rst_sent',
+                       16: 'tx_pwr',
+                       17: 'comment',
+                       18: 'notes'}
+    payloadAdifData = ''
+    for k in payloadAdifKeys.keys():
+        if len(qsodata[k]) > 0:
+            payloadAdifData = (payloadAdifData
+                               + f'<'
+                               + payloadAdifKeys[k]
+                               + ':' + str(len(qsodata[k]))
+                               + '>'
+                               + qsodata[k])
+    return payloadAdifData
 
 
 def generateQSLs(reduxqsos):
@@ -121,22 +145,14 @@ def generateQSLs(reduxqsos):
         # Array position reference again: 0APP_QRZLOG_LOGID, 1BAND, 2CALL, 3EMAIL, 4EQSL_QSL_SENT,
         # 5FREQ, 6MODE, 7MY_CITY, 8MY_COUNTRY, 9MY_GRIDSQUARE, 10NAME, 11QSO_DATE,
         # 12RST_RCVD, 13STATION_CALLSIGN, 14TIME_ON, 15RST_SENT, 16TX_PWR, 17COMMENT, 18NOTES
+        payloadAdifData = payloadAdifSelector(q)
         updatePayload = {'KEY': f'{ak}',
                          'ACTION': 'INSERT',
                          'OPTION': 'REPLACE',
-                         'ADIF': f'<band:{len(q[1])}>{q[1]}'
-                                 f'<mode:{len(q[6])}>{q[6]}'
-                                 f'<freq:{len(q[5])}>{q[5]}'
-                                 f'<call:{len(q[2])}>{q[2]}'
-                                 f'<qso_date:{len(q[11])}>{q[11]}'
-                                 f'<station_callsign:{len(q[13])}>{q[13]}'
-                                 f'<rst_sent:{len(q[15])}>{q[15]}'
-                                 f'<tx_pwr:{len(q[16])}>{q[16]}'
-                                 f'<comment:{len(q[17])}>{q[17]}'
-                                 f'<notes:{len(q[18])}>{q[18]}'
-                                 f'<eqsl_qsl_sent:1>Y'
-                                 f'<eqsl_qslsdate:{len(today)}>{today}'
-                                 f'<eor>'}
+                         'ADIF': payloadAdifData +
+                         f'<eqsl_qsl_sent:1>Y'
+                         f'<eqsl_qslsdate:{len(today)}>{today}'
+                         f'<eor>'}
 
         url = 'https://logbook.qrz.com/api'
         insertResponse = requests.get(url, params=updatePayload)
