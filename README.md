@@ -34,7 +34,7 @@ QSLGen is a utility to generate QSL cards and email them (using the MS Outlook c
 You must edit the python script, background image, and html file before running QSLGen.  Additionally, you will need to inform QSLGen of your API key(s).
 
 ### Essential Script Edits
-You must set the ```imgkitOptions``` and ```myName``` variables for your use case. 
+Set the ```imgkitOptions``` and ```myName``` variables for your use case. 
 ```python
 """
 Begin variables essential to the user.
