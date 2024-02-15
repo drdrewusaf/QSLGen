@@ -1,6 +1,9 @@
 # QSLGen
 QSLGen is a utility to generate QSL cards and email them (using the MS Outlook client with a properly setup email account) to station operators with public email addresses on QRZ.com.
 
+> [!NOTE]
+> You must be at least an XML subscription holder at QRZ.com to use your API key(s) in QSLGen.
+
 > [!IMPORTANT]
 > QSLGen requires the following applications/packages either as part of the Python environment, or on the PC.  Please install them properly before trying to run QSLGen.
 > <table>
@@ -26,8 +29,6 @@ QSLGen is a utility to generate QSL cards and email them (using the MS Outlook c
 > </td>
 > </td></tr> </table>
 > **You <strong>MUST</strong> add wkhtmltoimage's install directory to your system PATH for the script to run.  Here are some OK instructions to help you along...<a href="https://www.wikihow.com/Change-the-PATH-Environment-Variable-on-Windows">WikiHow Link</a>
->
-> Additionally, you must be at least an XML subscription holder at QRZ.com to use your API key(s) in QSLGen.
 ***
 ## Setup
 You must edit the python script, background image, and html file before running QSLGen.  Additionally, you will need to inform QSLGen of your API key(s).
@@ -74,7 +75,7 @@ The Curr_QSLGen.html file is created on the fly while QSLGen is running and iter
 > On the first run, QSLGen will ask for a starting date.  After it finishes, and as long as the Curr_QSLGen.html file is in the working directory, QSLGen will use Curr_QSLGen.html's "Date Modified" attribute to determine the starting date.
 
 
-### API Keys
+### API Key(s)
 QSLGen will ask you for your API key(s) if it does not find an apikey.txt file, or finds an empty apikeys.txt file, in the working directory.  You can enter them in the program and it will create or fill the file with the API keys given.  Alternatively, you can manually create the file in the working directory.  If you have multiple API keys, they must be separated by commas with no spaces.
 > [!CAUTION]
 > QSLGen stores your API key(s) in plain text.  Keep the location/file secure if you're worried.
