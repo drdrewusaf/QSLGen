@@ -57,8 +57,8 @@ def askToGenerate():
     validInputs = ['y', 'yes', 'n', 'no']
     valid = False
     while not valid:
-        yesno = input('Please confirm you want to generate/send these QSL Cards *AND*\n'
-                      'the Outlook desktop application is open. (Y/n): ').lower()
+        yesno = input('\nPlease confirm you want to generate/send these QSL Cards \n'
+                      '*AND* the Outlook desktop application is open. (Y/n): ').lower()
         # Default to yes.
         if not yesno:
             yesno = 'y'
@@ -66,7 +66,7 @@ def askToGenerate():
         elif yesno in validInputs:
             valid = True
         else:
-            print('Invalid input.')
+            print('\nInvalid input.')
             yesno = ''
     return (yesno)
 
@@ -141,7 +141,7 @@ def generateQSLs(reduxqsos):
         print('Email sent.')
         print('Deleting QSL card.')
         os.remove(filenameQSLCard)
-        print(f'Updating QSO on QRZ.com to reflect eQSL sent.')
+        print('Updating QSO on QRZ.com to reflect eQSL sent.')
         # Array position reference again: 0APP_QRZLOG_LOGID, 1BAND, 2CALL, 3EMAIL, 4EQSL_QSL_SENT,
         # 5FREQ, 6MODE, 7MY_CITY, 8MY_COUNTRY, 9MY_GRIDSQUARE, 10NAME, 11QSO_DATE,
         # 12RST_RCVD, 13STATION_CALLSIGN, 14TIME_ON, 15RST_SENT, 16TX_PWR, 17COMMENT, 18NOTES
@@ -170,19 +170,19 @@ def generateQSLs(reduxqsos):
 def addApiKeys():
     addedKeys = []
     finished = False
-    print('QSLGen will now ask you to input your API key(s) one at a time and\n'
-          'save them in apikeys.txt in this running directory.')
+    print('\nQSLGen will now ask you to input your API key(s) one at a time to\n'
+          'save them to an apikeys.txt file in this running directory.')
     while not finished:
-        newKey = input("Please enter one API key, with or without dashes, or type 'done' to finish.\n"
+        newKey = input("\nEnter one API key, with or without dashes, or type 'done' to finish.\n"
                        "New API key: ")
         if newKey == 'done':
             finished = True
         elif re.match('(\\d|[A-z]){4}(-?)(\\d|[A-z]){4}(-?)(\\d|[A-z]){4}(-?)(\\d|[A-z]){4}(-?)', newKey):
             addedKeys.append(newKey)
+            print(f'\nKey {newKey} added successfully.')
         else:
-            print('Invalid key.')
-    if len(addedKeys) > 0:
-        return (addedKeys)
+            print('\nInvalid key.')
+    return (addedKeys)
 
 
 def editApiKeyFile():
@@ -190,7 +190,7 @@ def editApiKeyFile():
     editsDone = False
     newKeys = []
     while not finished:
-        if os.path.isfile('apikeys.txt'):
+        try:
             with open('apikeys.txt', 'r') as f:
                 fKeys = f.read()
                 if len(fKeys) > 0:
@@ -198,37 +198,38 @@ def editApiKeyFile():
             f.close()
             while not editsDone:
                 count = 0
-                print('API keys currently in file and memory:\n')
+                print('\nAPI keys currently in file and memory:')
                 for k in newKeys:
                     print('[' + str(count) + ']: ' + ' ' + k)
                     count += 1
-                opt = input('Options:\n'
+                opt = input('\nOptions:\n'
                             '[0-n]: Delete key by id above.\n'
                             '[A]: Add new key(s).\n'
                             '[D]: Done. Return to main.\n'
-                            'Please enter your option: ').lower()
+                            '\nType your selection and press enter: ').lower()
                 if opt.isnumeric():
                     try:
                         newKeys.pop(int(opt))
                     except IndexError:
-                        print('Invalid key id.')
+                        print('\nInvalid key id.')
                 elif opt == 'd':
                     editsDone = True
                 elif opt == 'a':
+                    addedApiKeys = []
                     addedApiKeys = addApiKeys()
                     if len(addedApiKeys) > 0:
                         for k in addedApiKeys:
                             newKeys.append(k)
-                    print(f'Added {len(addedApiKeys)} keys.')
+                    print(f'\nAdded {len(addedApiKeys)} keys.')
                 else:
-                    print('Invalid input.')
-        else:
-            print('No apikeys.txt file found.  Will generate one now.')
+                    print('\nInvalid input.')
+        except FileNotFoundError:
+            print('\nNo apikeys.txt file found.  Will generate one now.')
             newKeys = addApiKeys()
         if not newKeys:
-            input('I cannot continue without at least one API key.\n'
-                  'Press Enter to exit.')
-            exit(0)
+            input('\nI cannot continue without at least one API key.\n'
+                  '\nPress Enter to exit.')
+            exit(1)
         else:
             finished = True
     with open('apikeys.txt', 'w') as f:
@@ -244,38 +245,45 @@ def editApiKeyFile():
 
 def mainMenu():
     global apiKeys
+    global generateSelected
     validInputs = ['g', 'u', 'q']
     valid = False
     while not valid:
-        opt = input('Welcome to QSLGen.\n\n'
+        opt = input('\nWelcome to QSLGen.\n\n'
                     'Please select from the following options:\n'
                     '[G]: Generate QSLs now.\n'
                     '[U]: Update or create your apikey.txt file.\n'
                     '[Q]: Quit.\n'
-                    'Please type your selection and press enter: ').lower()
+                    '\nType your selection and press enter: ').lower()
         if opt in validInputs:
             valid = True
         else:
-            print('Invalid input.')
+            print('\nInvalid input.')
     if opt == 'q':
-        print('See you next time!')
+        print('\nSee you next time!')
         exit(0)
     elif opt == 'u':
-        apiKeys = editApiKeyFile()
+        editApiKeyFile()
     elif opt == 'g':
         try:
-            with open('apikeys.txt') as f:
-                apiKeys = f.read().split(',')
-            f.close()
+            with open('apikeys.txt', 'r') as f:
+                fKeys = f.read()
+                f.close()
+                if len(fKeys) > 0:
+                    apiKeys = fKeys.split(',')
+                else:
+                    print('\nThe apikeys.txt file seems to be empty.')
+                    editApiKeyFile()
         except FileNotFoundError:
-            apiKeys = editApiKeyFile()
-        if len(apiKeys) == 0:
-            print('The apikeys.txt file seems to be empty.\n')
-            apiKeys = editApiKeyFile()
+            editApiKeyFile()
+        generateSelected = True
+
 
 
 # Get things started.
-mainMenu()
+generateSelected = False
+while not generateSelected:
+    mainMenu()
 
 # These are the dictionary keys in the ADIF data we want to work with (QRZ sends many others)
 wantedAdifKeys = ['APP_QRZLOG_LOGID', 'BAND', 'CALL', 'EMAIL', 'EQSL_QSL_SENT',
@@ -288,14 +296,14 @@ try:
 except FileNotFoundError:
     needDate = True
     while needDate:
-        print('Could not find Curr_QSLGen.html file. Assuming this is the first run.\n'
+        print('\nCould not find Curr_QSLGen.html file. Assuming this is the first run.\n'
               'This program uses the last modified date of the Curr_QSLGen.html file to\n'
               'determine which QSOs to download. Since that file does not exist, please \n'
               'provide the first date from which to gather confirmed QSOs. After this\n'
               'first run, the Curr_QSLGen.html file should not be deleted or modified by\n'
               'anything other than this script. As long as the file exists, you will not\n'
               'be asked for a date again. Suggest using a relatively recent date.\n')
-        dateSince = input('Please provide your desired date in the YYYY-MM-DD format:  ')
+        dateSince = input('\nPlease provide your desired date in the YYYY-MM-DD format:  ')
         if re.match('^(\\d){4}-(\\d){2}-(\\d){2}', dateSince):
             needDate = False
         else:
@@ -378,7 +386,7 @@ for ak in apiKeys:
         print(f'If there are any new confirmed QSOs since {dateSince}, they likely do not '
               f'have a public email address.')
         continue
-    print(f'Ready to generate and email QSL cards for {reduxDataLen} QSOs.\n'
+    print(f'\nReady to generate and email QSL cards for {reduxDataLen} QSOs.\n'
           'Here is a list of callsigns we will QSL:')
     qsoCount = 0
     for q in reduxqsos:
@@ -397,7 +405,7 @@ for ak in apiKeys:
             print('Moving on to the next API key.')
         continue
 
-print('QSLGen finished sending and updating okayed QSLs for all confirmed QSOs since\n'
+print('\nQSLGen finished sending and updating okayed QSLs for all confirmed QSOs since\n'
       f'{dateSince} using the provided API keys.\n'
       'You should check your email sent items and QRZ.com to ensure everything\n'
       'processed as expected.')
