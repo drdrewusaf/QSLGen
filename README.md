@@ -1,5 +1,5 @@
 # QSLGen
-QSLGen is a utility for Ham Radio operators to generate QSL cards and email them (using the MS Outlook client with a properly setup email account) to station operators with public email addresses on QRZ.com.
+QSLGen is a utility for Ham Radio operators to generate QSL cards, email them (using the MS Outlook client with a properly setup email account) to station operators with public email addresses on QRZ.com, and update eQSL Sent info for each emailed QSL card on QRZ.com.
 
 > [!NOTE]
 > You must be at least an XML subscription holder at QRZ.com to use your API key(s) in QSLGen.
@@ -84,4 +84,32 @@ QSLGen will ask you for your API key(s) if it does not find an apikey.txt file, 
 Simply run the python script after fulfilling the requirements above, and follow the onscreen prompts.
 ```
 python main.py
+```
+> [!IMPORTANT]
+> QSLGen will update your QRZ.com QSO records by setting eQSL Sent to true with the current date.  There is not currently a mechanism to prevent it save for removing or commenting out lines 144-167:
+```python
+print('Updating QSO on QRZ.com to reflect eQSL sent.')
+# Array position reference again: 0APP_QRZLOG_LOGID, 1BAND, 2CALL, 3EMAIL, 4EQSL_QSL_SENT,
+# 5FREQ, 6MODE, 7MY_CITY, 8MY_COUNTRY, 9MY_GRIDSQUARE, 10NAME, 11QSO_DATE,
+# 12RST_RCVD, 13STATION_CALLSIGN, 14TIME_ON, 15RST_SENT, 16TX_PWR, 17COMMENT, 18NOTES
+payloadAdifData = payloadAdifSelector(q)
+updatePayload = {'KEY': f'{ak}',
+                 'ACTION': 'INSERT',
+                 'OPTION': 'REPLACE',
+                 'ADIF': payloadAdifData +
+                 f'<eqsl_qsl_sent:1>Y'
+                 f'<eqsl_qslsdate:{len(today)}>{today}'
+                 f'<eor>'}
+
+url = 'https://logbook.qrz.com/api'
+insertResponse = requests.get(url, params=updatePayload)
+if 'REPLACE' not in insertResponse.text:
+    with open('log.txt', 'a') as log:
+        logWriter(f'QRZ.com reported an error while updating the QSO'
+                  f' with callsign {q[2]}.\n'
+                  f'Here is the response:  {insertResponse.text}\n',
+                  end=True)
+        print(f'QRZ.com reported an error: {insertResponse.text}')
+else:
+    print('QRZ.com QSO updated.')
 ```
