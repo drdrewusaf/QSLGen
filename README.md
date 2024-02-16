@@ -1,5 +1,5 @@
 # QSLGen
-QSLGen is a utility to generate QSL cards and email them (using the MS Outlook client with a properly setup email account) to station operators with public email addresses on QRZ.com.
+QSLGen is a utility for Ham Radio operators to generate QSL cards and email them (using the MS Outlook client with a properly setup email account) to station operators with public email addresses on QRZ.com.
 
 > [!NOTE]
 > You must be at least an XML subscription holder at QRZ.com to use your API key(s) in QSLGen.
