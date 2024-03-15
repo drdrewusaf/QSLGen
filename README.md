@@ -27,7 +27,7 @@ QSLGen is a utility for Ham Radio operators to generate QSL cards, email them (u
 > <tr><td><a href="https://wkhtmltopdf.org">wkhtmltoimage**</a></td></tr>
 > </table>
 > </td>
-> </td></tr> </table>
+> </tr> </table>
 > **You <strong>MUST</strong> add wkhtmltoimage's install directory to your system PATH for the script to run.  Here are some OK instructions to help you along...<a href="https://www.wikihow.com/Change-the-PATH-Environment-Variable-on-Windows">WikiHow Link</a>
 ***
 ## Setup
@@ -59,7 +59,7 @@ The ```imgkitOptions``` variable defines the size of the image as well as the fo
 > As mentioned in the script, you must leave the ```enable-local-file-access``` option or imgkit will not be able to read/write your QSL Cards.
 
 ### Background Image
-If you choose to have a background image the filename <strong>MUST</strong> follow the naming convention of the included file for <strong>ALL</strong> callsigns/API keys QSLGen will run through.  The naming convention is your callsign in all caps followed by underscore ( _ ) followed by "bg".  If you have a prefix or suffix on a callsign, replace the slash ( / ) with and underscore ( _ ).
+If you choose to have a background image the filename <strong>MUST</strong> follow the naming convention of the included file for <strong>ALL</strong> callsigns/API keys QSLGen will run through.  The naming convention is your callsign in all caps followed by underscore ( _ ) followed by "bg".  If you have a prefix or suffix on a callsign, replace the slash ( / ) with an underscore ( _ ).
 - Regular callsign (ex. DA6AJP): ```DA6AJP_bg.jpg```
 - Callsign with prefix (ex. SO/DA6AJP): ```SO_DA6AJP_bg.jpg```
 

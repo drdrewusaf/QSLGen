@@ -33,7 +33,7 @@ apiKeys = []
 def underScoreCheck(ixCall):
     """
     QRZ.com returns prefixed and suffixed callsigns with an underscore.
-    This function returns it to a slash for the QSL card and email, and
+    This function returns it to a slash for the QSL card and email text, and
     returns it to an underscore for filenames.
     """
     if '_' in ixCall:
@@ -57,9 +57,9 @@ def askToGenerate():
     validInputs = ['y', 'yes', 'n', 'no']
     valid = False
     while not valid:
-        yesno = input('\nPlease confirm you want to generate/send these QSL Cards \n'
-                      '*AND* the Outlook desktop application is open. (Y/n): ').lower()
-        # Default to yes.
+        yesno = input('\nConfirm the **Outlook desktop application is open** in the background, \n'
+                      'and you want to generate and send these QSL Cards. (Y/n): ').lower()
+        # Default to yes if the user just presses enter.
         if not yesno:
             yesno = 'y'
             valid = True
@@ -72,6 +72,11 @@ def askToGenerate():
 
 
 def payloadAdifSelector(qsodata):
+    """
+    Here we are building the payload to go along with the QSO update on QRZ.com.
+    This is planned to expand to the full ADIF spec, but for now only updates
+    the fields listed below.
+    """
     payloadAdifKeys = {1: 'band',
                        2: 'call',
                        5: 'freq',
@@ -96,6 +101,10 @@ def payloadAdifSelector(qsodata):
 
 
 def generateQSLs(reduxqsos):
+    """
+    This is where we generate the QSL card and email, then send it using the
+    Microsoft Outlook application.
+    """
     for q in reduxqsos:
         callLocalUnderscore = underScoreCheck(q[13])
         callDistantUnderscore = underScoreCheck(q[2])
@@ -121,7 +130,7 @@ def generateQSLs(reduxqsos):
         imgkit.from_file('Curr_QSLGen.html', f'{filenameQSLCard}', options=imgkitOptions)
         print(f'Sending QSL card email to {q[2]}.')
         emailName = q[10].title()
-        # Outlook needs to be opened by the user first
+        # Outlook needs to be opened by the user before QSLGen gets here.
         outlook = win32.Dispatch('outlook.application')
         mail = outlook.CreateItem(0)
         mail.To = q[3]
@@ -142,17 +151,14 @@ def generateQSLs(reduxqsos):
         print('Deleting QSL card.')
         os.remove(filenameQSLCard)
         print('Updating QSO on QRZ.com to reflect eQSL sent.')
-        # Array position reference again: 0APP_QRZLOG_LOGID, 1BAND, 2CALL, 3EMAIL, 4EQSL_QSL_SENT,
-        # 5FREQ, 6MODE, 7MY_CITY, 8MY_COUNTRY, 9MY_GRIDSQUARE, 10NAME, 11QSO_DATE,
-        # 12RST_RCVD, 13STATION_CALLSIGN, 14TIME_ON, 15RST_SENT, 16TX_PWR, 17COMMENT, 18NOTES
         payloadAdifData = payloadAdifSelector(q)
         updatePayload = {'KEY': f'{ak}',
                          'ACTION': 'INSERT',
                          'OPTION': 'REPLACE',
                          'ADIF': payloadAdifData +
-                         f'<eqsl_qsl_sent:1>Y'
-                         f'<eqsl_qslsdate:{len(today)}>{today}'
-                         f'<eor>'}
+                                 f'<eqsl_qsl_sent:1>Y'
+                                 f'<eqsl_qslsdate:{len(today)}>{today}'
+                                 f'<eor>'}
 
         url = 'https://logbook.qrz.com/api'
         insertResponse = requests.get(url, params=updatePayload)
@@ -168,6 +174,9 @@ def generateQSLs(reduxqsos):
 
 
 def addApiKeys():
+    """
+    Based on user input, create an array of API keys to be added to the text file.
+    """
     addedKeys = []
     finished = False
     print('\nQSLGen will now ask you to input your API key(s) one at a time to\n'
@@ -186,6 +195,11 @@ def addApiKeys():
 
 
 def editApiKeyFile():
+    """
+    List any currently saved API keys and provide a menu for editing the API key text
+    file, if it exists.  At the end we return the newKeys array as the set of keys to
+    use durring this session.
+    """
     finished = False
     editsDone = False
     newKeys = []
@@ -244,6 +258,9 @@ def editApiKeyFile():
 
 
 def mainMenu():
+    """
+    This is the main menu for QSLGen.
+    """
     global apiKeys
     global generateSelected
     validInputs = ['g', 'u', 'q']
@@ -279,18 +296,17 @@ def mainMenu():
         generateSelected = True
 
 
-
 # Get things started.
 generateSelected = False
 while not generateSelected:
     mainMenu()
 
-# These are the dictionary keys in the ADIF data we want to work with (QRZ sends many others)
+# These are the dictionary keys in the ADIF data we want to work with (QRZ.com sends many others).
 wantedAdifKeys = ['APP_QRZLOG_LOGID', 'BAND', 'CALL', 'EMAIL', 'EQSL_QSL_SENT',
                   'FREQ', 'MODE', 'MY_CITY', 'MY_COUNTRY', 'MY_GRIDSQUARE', 'NAME',
                   'QSO_DATE', 'RST_RCVD', 'STATION_CALLSIGN', 'TIME_ON', 'RST_SENT', 'TX_PWR',
-                  'COMMENT', 'NOTES']
-
+                  'COMMENT', 'NOTES', 'APP_QRZLOG_QSLDATE', 'LOTW_QSLRDATE']
+# First we check if there is a previously generated html file and base our dateSince variable on it.
 try:
     dateSince = datetime.date.fromtimestamp(os.path.getmtime('Curr_QSLGen.html'))
 except FileNotFoundError:
@@ -312,6 +328,7 @@ except FileNotFoundError:
 # Iterate through the user's API keys.
 for ak in apiKeys:
     today = str(datetime.date.today()).replace('-', '')
+    dateSinceDate = datetime.datetime.strptime(dateSince, '%Y-%m-%d')
     qsos = []
     reduxqsos = []
     print(f'\nGathering confimed QSOs since {dateSince} for logbook API key {ak}...')
@@ -367,13 +384,22 @@ for ak in apiKeys:
                         curr_qso.append(q[wantedAdifKeys[keyCount]])
                     keyCount += 1
             reduxqsos.append(curr_qso)
-
-    # Array position reference: 0APP_QRZLOG_LOGID, 1BAND, 2CALL, 3EMAIL, 4EQSL_QSL_SENT,
-    # 5FREQ, 6MODE, 7MY_CITY, 8MY_COUNTRY, 9MY_GRIDSQUARE, 10NAME, 11QSO_DATE,
-    # 12RST_RCVD, 13STATION_CALLSIGN, 14TIME_ON, 15RST_SENT, 16TX_PWR, 17COMMENT, 18NOTES
     qsoCount = 0
     while qsoCount < len(reduxqsos):
+        """ 
+        Find out if QSOs are modified after their QSL date and their QSL date is older than dateSince.
+        This is kind of janky - QRZ seems to update their QSL date whenever the QSO is updated.
+        So, we're trying to use LOTW_QSLRDATE as a sanity check first, if it's there.
+        """
+        qslDate = datetime.datetime.strptime(reduxqsos[qsoCount][19], '%Y%m%d')
+        if len(reduxqsos[qsoCount][20]) > 0:
+            lotwQslRDate = datetime.datetime.strptime(reduxqsos[qsoCount][20], '%Y%m%d')
+        if (lotwQslRDate and lotwQslRDate < qslDate):
+            qslDate = lotwQslRDate
+        # Remove QSOs that have already been eQSL'd, do not have a public email, or are older than dateSince
         if len(reduxqsos[qsoCount][3]) <= 0 or 'Y' in reduxqsos[qsoCount][4]:
+            del reduxqsos[qsoCount]
+        elif qslDate < dateSinceDate:
             del reduxqsos[qsoCount]
         else:
             qsoCount += 1
