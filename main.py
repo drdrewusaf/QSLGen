@@ -321,6 +321,7 @@ except FileNotFoundError:
               'be asked for a date again. Suggest using a relatively recent date.\n')
         dateSince = input('\nPlease provide your desired date in the YYYY-MM-DD format:  ')
         if re.match('^(\\d){4}-(\\d){2}-(\\d){2}', dateSince):
+            dateSince = datetime.date.fromisoformat(dateSince)
             needDate = False
         else:
             print('Invalid format.')
@@ -328,7 +329,6 @@ except FileNotFoundError:
 # Iterate through the user's API keys.
 for ak in apiKeys:
     today = str(datetime.date.today()).replace('-', '')
-    dateSinceDate = datetime.datetime.strptime(dateSince, '%Y-%m-%d')
     qsos = []
     reduxqsos = []
     print(f'\nGathering confimed QSOs since {dateSince} for logbook API key {ak}...')
@@ -361,7 +361,6 @@ for ak in apiKeys:
         cursor = data_re[0]
         data = data[cursor:]
         qsos = adif_io.read_from_string(data)[0]
-
     dataLen = len(qsos)
     if dataLen <= 0:
         continue
@@ -391,15 +390,15 @@ for ak in apiKeys:
         This is kind of janky - QRZ seems to update their QSL date whenever the QSO is updated.
         So, we're trying to use LOTW_QSLRDATE as a sanity check first, if it's there.
         """
-        qslDate = datetime.datetime.strptime(reduxqsos[qsoCount][19], '%Y%m%d')
+        qslDate = datetime.date.fromisoformat(reduxqsos[qsoCount][19])
         if len(reduxqsos[qsoCount][20]) > 0:
-            lotwQslRDate = datetime.datetime.strptime(reduxqsos[qsoCount][20], '%Y%m%d')
+            lotwQslRDate = datetime.date.fromisoformat(reduxqsos[qsoCount][20])
         if (lotwQslRDate and lotwQslRDate < qslDate):
             qslDate = lotwQslRDate
         # Remove QSOs that have already been eQSL'd, do not have a public email, or are older than dateSince
         if len(reduxqsos[qsoCount][3]) <= 0 or 'Y' in reduxqsos[qsoCount][4]:
             del reduxqsos[qsoCount]
-        elif qslDate < dateSinceDate:
+        elif qslDate < dateSince:
             del reduxqsos[qsoCount]
         else:
             qsoCount += 1
