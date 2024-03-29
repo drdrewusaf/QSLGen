@@ -393,7 +393,9 @@ for ak in apiKeys:
         qslDate = datetime.date.fromisoformat(reduxqsos[qsoCount][19])
         if len(reduxqsos[qsoCount][20]) > 0:
             lotwQslRDate = datetime.date.fromisoformat(reduxqsos[qsoCount][20])
-        if (lotwQslRDate and lotwQslRDate < qslDate):
+        else:
+            lotwQslRDate = qslDate
+        if (lotwQslRDate < qslDate):
             qslDate = lotwQslRDate
         # Remove QSOs that have already been eQSL'd, do not have a public email, or are older than dateSince
         if len(reduxqsos[qsoCount][3]) <= 0 or 'Y' in reduxqsos[qsoCount][4]:
