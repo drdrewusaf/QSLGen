@@ -1,4 +1,4 @@
-# QSLGen
+# QSLGen <img src="https://github.com/drdrewusaf/QSLGen/blob/master/QSL%20Icon.png" alt="drawing" width="150"/>
 QSLGen is a utility for Ham Radio operators to generate QSL cards, email them (using the MS Outlook client with a properly setup email account) to station operators with public email addresses on QRZ.com, and update eQSL Sent info for each emailed QSL card on QRZ.com.
 
 > [!NOTE]
