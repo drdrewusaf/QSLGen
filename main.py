@@ -40,8 +40,6 @@ def underScoreCheck(ixCall):
         ixCall = ixCall.replace('_', '/')
     elif '/' in ixCall:
         ixCall = ixCall.replace('/', '_')
-    else:
-        return (ixCall)
     return (ixCall)
 
 
@@ -54,16 +52,13 @@ def logWriter(message, end=True):
 
 
 def askToGenerate():
-    validInputs = ['y', 'yes', 'n', 'no']
+    validInputs = ['y', 'yes', 'n', 'no', '']
     valid = False
     while not valid:
         yesno = input('\nConfirm the **Outlook desktop application is open** in the background, \n'
                       'and you want to generate and send these QSL Cards. (Y/n): ').lower()
         # Default to yes if the user just presses enter.
-        if not yesno:
-            yesno = 'y'
-            valid = True
-        elif yesno in validInputs:
+        if yesno in validInputs:
             valid = True
         else:
             print('\nInvalid input.')
@@ -240,7 +235,7 @@ def editApiKeyFile():
         except FileNotFoundError:
             print('\nNo apikeys.txt file found.  Will generate one now.')
             newKeys = addApiKeys()
-        if not newKeys:
+        if len(newKeys) < 1:
             input('\nI cannot continue without at least one API key.\n'
                   '\nPress Enter to exit.')
             exit(1)
@@ -297,11 +292,12 @@ def mainMenu():
 
 
 # Get things started.
+generatedQSLs = 0
 generateSelected = False
 while not generateSelected:
     mainMenu()
 
-# These are the dictionary keys in the ADIF data we want to work with (QRZ.com sends many others).
+# These are the dictionary keys in the ADIF data we want to work with.
 wantedAdifKeys = ['APP_QRZLOG_LOGID', 'BAND', 'CALL', 'EMAIL', 'EQSL_QSL_SENT',
                   'FREQ', 'MODE', 'MY_CITY', 'MY_COUNTRY', 'MY_GRIDSQUARE', 'NAME',
                   'QSO_DATE', 'RST_RCVD', 'STATION_CALLSIGN', 'TIME_ON', 'RST_SENT', 'TX_PWR',
@@ -348,7 +344,7 @@ for ak in apiKeys:
             logWriter('Check your API Key. QRZ.com reported an invalid key.', end=False)
             print('Check your API Key. QRZ.com reported an invalid key.')
         else:
-            logWriter('Regex search failed. Probably no confirmed QSOs since {dateSince}.\n'
+            logWriter(f'Regex search failed. Probably no confirmed QSOs since {dateSince}.\n'
                       f'API key: {ak}\n'
                       f'dateSince: {dateSince}\n'
                       f'data: {data}\n',
@@ -361,8 +357,8 @@ for ak in apiKeys:
         cursor = data_re[0]
         data = data[cursor:]
         qsos = adif_io.read_from_string(data)[0]
-    dataLen = len(qsos)
-    if dataLen <= 0:
+
+    if len(qsos) <= 0:
         continue
     else:
         for q in qsos:
@@ -406,7 +402,7 @@ for ak in apiKeys:
             qsoCount += 1
     reduxDataLen = len(reduxqsos)
     if reduxDataLen <= 0:
-        logWriter(f'Length of reduced data is {dataLen}.\n'
+        logWriter(f'Length of reduced data is {reduxDataLen}.\n'
                   f'If there are any new confirmed QSOs since {dateSince},\n'
                   f'they likely do not have a public email address.',
                   end=True)
@@ -424,16 +420,18 @@ for ak in apiKeys:
             qsoCount += 1
     # Give the user a chance to cancel based on the data QSLGen plans to use.
     yesno = askToGenerate()
-    if yesno == 'y' or yesno == 'yes':
+    if yesno == 'y' or yesno == 'yes' or yesno == '':
         generateQSLs(reduxqsos)
+        generatedQSLs += reduxDataLen
     elif yesno == 'n' or yesno == 'no':
         print('You have declined to send the QSLs listed above.\n')
         if len(apiKeys) > 1:
             print('Moving on to the next API key.')
         continue
 
-print('\nQSLGen finished sending and updating okayed QSLs for all confirmed QSOs since\n'
-      f'{dateSince} using the provided API keys.\n'
+input(f'\nQSLGen finished sending and updating {generatedQSLs} QSLs for confirmed QSOs since\n'
+      f'{dateSince} using the provided API keys.\n\n'
       'You should check your email sent items and QRZ.com to ensure everything\n'
-      'processed as expected.')
+      'processed as expected.\n\n'
+      'Press Enter to exit.')
 exit(0)
