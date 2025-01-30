@@ -154,9 +154,8 @@ def generateQSLs(reduxqsos):
                                  f'<eqsl_qsl_sent:1>Y'
                                  f'<eqsl_qslsdate:{len(today)}>{today}'
                                  f'<eor>'}
-
         url = 'https://logbook.qrz.com/api'
-        insertResponse = requests.get(url, params=updatePayload)
+        insertResponse = requests.get(url, headers=headers, params=updatePayload)
         if 'REPLACE' not in insertResponse.text:
             with open('log.txt', 'a') as log:
                 logWriter(f'QRZ.com reported an error while updating the QSO'
@@ -302,6 +301,10 @@ wantedAdifKeys = ['APP_QRZLOG_LOGID', 'BAND', 'CALL', 'EMAIL', 'EQSL_QSL_SENT',
                   'FREQ', 'MODE', 'MY_CITY', 'MY_COUNTRY', 'MY_GRIDSQUARE', 'NAME',
                   'QSO_DATE', 'RST_RCVD', 'STATION_CALLSIGN', 'TIME_ON', 'RST_SENT', 'TX_PWR',
                   'COMMENT', 'NOTES', 'APP_QRZLOG_QSLDATE', 'LOTW_QSLRDATE']
+
+# New user agent header requirement per QRZ.com API specification
+headers = {'User-Agent': 'QSLGen.py/1.0 (KF3OFP)'}
+
 # First we check if there is a previously generated html file and base our dateSince variable on it.
 try:
     dateSince = datetime.date.fromtimestamp(os.path.getmtime('Curr_QSLGen.html'))
@@ -333,7 +336,7 @@ for ak in apiKeys:
                   'OPTION': f'MODSINCE:{dateSince},STATUS:CONFIRMED'}
 
     url = 'https://logbook.qrz.com/api'
-    fetchResponse = requests.get(url, params=getPayload)
+    fetchResponse = requests.get(url, headers=headers, params=getPayload)
     # To fix errors in reading special characters, convert to ascii
     fetchResponse.encoding = 'ascii'
     data = html2text.html2text(fetchResponse.text)
