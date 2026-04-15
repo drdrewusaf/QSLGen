@@ -1,0 +1,15 @@
+import datetime
+__package_name__ = 'QSLGen'
+__version__ = 2.0
+__author__ = 'KF3OFP'
+
+# These are the dictionary keys in the ADIF data we want to work with.
+wantedAdifKeys = ['APP_QRZLOG_LOGID', 'BAND', 'CALL', 'EMAIL', 'EQSL_QSL_SENT',
+                  'FREQ', 'MODE', 'MY_CITY', 'MY_COUNTRY', 'MY_GRIDSQUARE', 'NAME',
+                  'QSO_DATE', 'RST_RCVD', 'STATION_CALLSIGN', 'TIME_ON', 'RST_SENT', 'TX_PWR',
+                  'COMMENT', 'NOTES', 'APP_QRZLOG_QSLDATE', 'LOTW_QSLRDATE']
+
+# User agent header requirement per QRZ.com API specification
+headers = {'User-Agent': f'{__package_name__}/{__version__} ({__author__})'}
+
+today = str(datetime.date.today()).replace('-', '')
