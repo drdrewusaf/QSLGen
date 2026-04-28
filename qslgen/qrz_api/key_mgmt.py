@@ -1,11 +1,10 @@
-"""
-Load, update, and edit the apikeys.txt file.
-"""
 import re
-import qslgen.qrz_api.crypto as crypto
+
+import qslgen.crypto as crypto
+from qslgen import apiKeysFile
 
 
-def edit_menu(newKeys):
+def edit_api_keys(newKeys):
     """
     Main menu for editing the API keys file.
     """
@@ -18,10 +17,10 @@ def edit_menu(newKeys):
                 print('[' + str(count) + ']: ' + ' ' + k)
                 count += 1
         opt = input(f'\nOptions:\n'
-                    '[0-n]: Delete key by id above.\n'
-                    '[A]: Add new key(s).\n'
-                    '[D]: Done. Return to main.\n'
-                    '\nType your selection and press enter: ').lower()
+                    f'[0-n]: Delete key by id above.\n'
+                    f'[A]: Add new key(s).\n'
+                    f'[D]: Done. Return to previous menu.\n'
+                    f'\nType your selection and press enter: ').lower()
         if opt.isnumeric():
             try:
                 newKeys.pop(int(opt))
@@ -88,7 +87,7 @@ def write_key_file(newKeys):
     cryptoKey = crypto.load_crypto_key()
     newKeysText = ''
     try:
-        with open('config\\apikeys.txt', 'wb') as f:
+        with open(apiKeysFile, 'wb') as f:
             count = 0
             for k in newKeys:
                 if count == len(newKeys) - 1:
@@ -96,30 +95,32 @@ def write_key_file(newKeys):
                 else:
                     newKeysText = newKeysText + k + ','
                     count += 1
-            encryptedFile = crypto.encrypt_api_keys(newKeysText, cryptoKey)
+            encryptedFile = crypto.encrypt_data(newKeysText, cryptoKey)
             f.write(encryptedFile)
         f.close()
     except PermissionError:
         print(f'\nERROR:  Permission was denied when writing API keys file.')
 
 
-def load_api_keys(opt):
+def load_api_keys():
     """
-    Decrypt and load any API keys in the apikeys.txt file into memory. If
-    the file doesn't exist or is empty, prompt the user for API keys.
+    Decrypt and load any API keys in the apikeys.txt file into memory.
     """
     newKeys = []
     cryptoKey = crypto.load_crypto_key()
     try:
-        with open('config\\apikeys.txt', 'rb') as f:
-            decryptedFile = crypto.decrypt_api_keys(f.read(), cryptoKey)
-            if len(decryptedFile) > 0:
+        with open(apiKeysFile, 'rb') as f:
+            decryptedFile = crypto.decrypt_data(f.read(), cryptoKey)
+            if len(decryptedFile) > 0 and decryptedFile != 'u':
                 newKeys = decryptedFile.split(',')
-        f.close()
-        valid = True
+                f.close()
+            else:
+                print(f'\nNo API keys found. Please use the settings menu to add API keys.')
+                return newKeys
     except FileNotFoundError:
-        print(f'\nNo apikeys.txt file found.  Please add at least one API key.')
-    if len(newKeys) <= 0 or opt == 'u':
-        newKeys = edit_menu(newKeys)
-        valid = False
-    return newKeys, valid
+        print(f'\nNo apikeys.txt file found.  Please use the settings menu to add API keys.')
+        return newKeys
+    if len(newKeys) == 0:
+        print(f'\nNo API keys found. Please use the settings menu to add API keys.')
+        return newKeys
+    return newKeys

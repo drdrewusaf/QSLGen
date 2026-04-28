@@ -1,3 +1,5 @@
 QSLGen.code-workspace
 log.txt
-/apikeys.txt
+qslgen\config\apikeys.txt
+qslgen\config\oauth.json
+old code holder.py

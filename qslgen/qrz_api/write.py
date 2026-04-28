@@ -7,11 +7,6 @@ from qslgen.logger import writer as log_writer
 
 
 def payloadAdifSelector(qsodata):
-    """
-    Here we are building the payload to go along with the QSO update on QRZ.com.
-    This is planned to expand to the full ADIF spec, but for now only updates
-    the fields listed below.
-    """
     payloadAdifKeys = {1: 'band',
                        2: 'call',
                        5: 'freq',
@@ -42,9 +37,9 @@ def write_data(q, apiKey):
                      'ACTION': 'INSERT',
                      'OPTION': 'REPLACE',
                      'ADIF': payloadAdifData +
-                             f'<eqsl_qsl_sent:1>Y'
-                             f'<eqsl_qslsdate:{len(today)}>{today}'
-                             f'<eor>'}
+                            f'<eqsl_qsl_sent:1>Y'
+                            f'<eqsl_qslsdate:{len(today)}>{today}'
+                            f'<eor>'}
     url = 'https://logbook.qrz.com/api'
     insertResponse = requests.get(url, headers=headers, params=updatePayload)
     if 'REPLACE' not in insertResponse.text:

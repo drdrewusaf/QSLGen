@@ -1,59 +1,47 @@
+import datetime
 import os
+from pathlib import Path
 
 # To use imgkit, you need to install wkhtmltopdf for your OS and add it to PATH.
 import imgkit
-import win32com.client as win32
-from qslgen import wantedAdifKeys
 from bs4 import BeautifulSoup
-from qso_processor import underscore_check
+
+import qso_processor
+from logger import writer as log_writer
+from qrz_api import read as api_read
 from qrz_api import write as api_write
-
-"""
-Begin variables essential to the user.
-**You MUST update the variables below for your personal use.**
-"""
-# These imgkit options are set for the size of my QSL card...change to your preference/background image size.
-imgkitOptions = {
-    'format': 'jpg',
-    'crop-w': '1800',
-    'crop-h': '1115',
-    'enable-local-file-access': ''  # Do not remove this option; it will cause imgkit/wkhtmltoimage failure.
-}
-# Place your name in the variable below for the email signature.
-myName = 'Your Name'
-
-"""
-End user essential edits.
-"""
-generatedQSLs = 0
+from qslgen import configDir
+from qslgen import emailer
+from qslgen import oauth
+from qslgen import qslFilesDir
+from qslgen import wantedAdifKeys
+from qso_processor import underscore_check
 
 
-def ask_to_generate():
+def ask_to_generate(sendOrSave):
     validInputs = ['y', 'yes', 'n', 'no', '']
     valid = False
     while not valid:
-        yesno = input('\nConfirm the **Outlook desktop application is open** in the background, \n'
-                      'and you want to generate and send these QSL Cards. (Y/n): ').lower()
-        # Default to yes if the user just presses enter.
+        yesno = input(f'\nConfirm you want to generate and {sendOrSave} these QSL Cards. (Y/n): ').lower()
         if yesno in validInputs:
-            valid = True
+            if 'n' or 'no' in yesno:
+                return False
+            else:
+                return True
         else:
             print('\nInvalid input.')
             yesno = ''
-    return yesno
 
 
-def generateQSLs(qsos, apiKey):
-    """
-    This is where we generate the QSL card and email, then send it using the
-    Microsoft Outlook application.
-    """
+def generateQSLs(qsos, apiKey, imgkitOptions, myName, sendOrSave, keepQSLCard, updateQRZ, todayDir, service):
     generatedQSLs = 0
+    htmlFile = Path.joinpath(qslFilesDir,'QSLGen.html')
     for q in qsos:
         callLocalUnderscore = underscore_check(q[13])
         callDistantUnderscore = underscore_check(q[2])
         # The HTML file below is the template for the QSL Card. Edit the file as you see fit.
-        with open('config\\qsl\\QSLGen.html') as templateFile:
+        bgImageFile = Path.joinpath(qslFilesDir, 'bg_images', f'{callLocalUnderscore}_bg.jpg')
+        with open(htmlFile) as templateFile:
             soup = BeautifulSoup(templateFile, 'html.parser')
         templateFile.close()
         idCount = 1
@@ -66,46 +54,80 @@ def generateQSLs(qsos, apiKey):
         soup.find_all(id='call')[0].string.replaceWith(q[13])
         soup.find_all(id='localStation')[0].string.replaceWith(f'{q[7]}, {q[8]}  {q[9]}')
         soup.find_all(id='thanks')[0].string.replaceWith(f'Thanks for the QSO! 73 de {q[13]}')
-        soup.body['style'] = f"background-image: url('bg_images\\{callLocalUnderscore}_bg.jpg');"
-        with open('config\\qsl\\Curr_QSLGen.html', 'w') as currQSL:
+        soup.body['style'] = f"background-image: url('{bgImageFile}');"
+        with open(htmlFile, 'w') as currQSL:
             currQSL.write(str(soup))
         currQSL.close()
-        filenameQSLCard = f'{callDistantUnderscore} de {callLocalUnderscore}.jpg'
-        imgkit.from_file('config\\qsl\\Curr_QSLGen.html', f'config\\qsl\\{filenameQSLCard}',
+        filename = f'{callDistantUnderscore} de {callLocalUnderscore}'
+        oPath = Path.joinpath(todayDir, f'{filename}.jpg')
+        imgkit.from_file(htmlFile,
+                         oPath,
                          options=imgkitOptions)
-        print(f'Sending QSL card email to {q[2]}.')
-        emailName = q[10].title()
-        # Outlook needs to be opened by the user before QSLGen gets here.
-        outlook = win32.Dispatch('outlook.application')
-        mail = outlook.CreateItem(0)
-        mail.To = q[3]
-        mail.Subject = f'QSL de {q[13]}'
-        mail.Body = (f'Good Day {emailName} ({q[2]})!\n\n'
-                     'Thank you for the QSO!  You will find my QSL card attached.  '
-                     'The QSO is logged on QRZ and LOTW.\n'
-                     'Hope to hear you on the air again soon!\n\n\n'
-                     '73,\n'
-                     f'{q[13]}\n'
-                     f'{myName}\n\n'
-                     '* This email was automatically generated and sent using the QSLGen Python script '
-                     'by KF3OFP/DA6AJP: https://github.com/drdrewusaf/QSLGen *')
-        attachment = f'config\\qsl\\{filenameQSLCard}'
-        mail.Attachments.Add(attachment)
-        mail.Send()
-        print('Email sent.')
-        print('Deleting QSL card.')
-        os.remove(f'config\\qsl\\{filenameQSLCard}')
-        api_write.write_data(q, apiKey)
+        emailer.generate_email(sendOrSave, todayDir, filename, myName, q, service)
+        if keepQSLCard == 'DELETE':
+            print('Deleting QSL card.')
+            os.remove(oPath)
+        if updateQRZ == 'YES':
+            api_write.write_data(q, apiKey)
         generatedQSLs += 1
     return generatedQSLs
 
 
-def generator_main(qsos, apiKey):
+def generator_main(settings, apiKeys):
+    dateSince = datetime.date.fromisoformat(settings['dateSince'])
+    todayDir = Path.joinpath(configDir, 'cards', f'{settings['dateSince']}')
+    try:
+        os.mkdir(todayDir)
+    except FileExistsError:
+        pass
+    except PermissionError:
+        print(f'Permission denied while making directory {todayDir}')
     generatedQSLs = 0
-    yesno = ask_to_generate()
-    if yesno == 'y' or yesno == 'yes' or yesno == '':
-        generatedQSLs = generateQSLs(qsos, apiKey)
+    apiKeyCount = 0
+    imgkitOptions = settings['imgkitOptions']
+    service = oauth.build_service()
 
-    elif yesno == 'n' or yesno == 'no':
-        print('You have declined to send the QSLs listed above.\n')
+    for ak in apiKeys:
+        qso_data = api_read.request_data(ak, dateSince)
+        if len(qso_data) > 0:
+            if qso_data == 'error':
+                return generatedQSLs
+            selected_qsos = qso_processor.processor(qso_data, dateSince)
+            selected_qsos_len = len(selected_qsos)
+            if selected_qsos_len <= 0:
+                log_writer(f'Length of reduced data is {selected_qsos_len}.\n'
+                           f'If there are any new confirmed QSOs since {dateSince},\n'
+                           f'they likely do not have a public email address.',
+                           end=True)
+                print(f'If there are any new confirmed QSOs since {dateSince}, they likely do not '
+                      f'have a public email address.')
+                continue
+            else:
+                print(f'\nReady to generate and email QSL cards for {selected_qsos_len} QSOs.\n'
+                      f'Here is a list of callsigns we will QSL:')
+                qsoCount = 0
+                for q in selected_qsos:
+                    if qsoCount == selected_qsos - 1:
+                        print(f'{q[2]}')
+                    else:
+                        print(f'{q[2]}, ', end='')
+                        qsoCount += 1
+                yesno = ask_to_generate(settings['email'])
+                if yesno:
+                    generatedQSLs = generatedQSLs + generateQSLs(selected_qsos,
+                                                                 ak,
+                                                                 imgkitOptions,
+                                                                 settings['myName'],
+                                                                 settings['email'],
+                                                                 settings['keepQSLCard'],
+                                                                 settings['updateQRZ'],
+                                                                 todayDir,
+                                                                 service)
+                else:
+                    print('You have declined to send the QSLs listed above.\n')
+                apiKeyCount += 1
+                if len(apiKeys) - 1 < apiKeyCount:
+                    print(f'Moving on to next API key.')
+    if settings['keepQSLCard'] == 'DELETE' and generatedQSLs > 0:
+        os.remove(todayDir)
     return generatedQSLs
