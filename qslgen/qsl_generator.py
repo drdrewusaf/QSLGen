@@ -2,9 +2,8 @@ import datetime
 import os
 from pathlib import Path
 
-# To use imgkit, you need to install wkhtmltopdf for your OS and add it to PATH.
-import imgkit
 from bs4 import BeautifulSoup
+from html2image import Html2Image
 
 import qso_processor
 from logger import writer as log_writer
@@ -33,9 +32,9 @@ def ask_to_generate(sendOrSave):
             yesno = ''
 
 
-def generateQSLs(qsos, apiKey, imgkitOptions, myName, sendOrSave, keepQSLCard, updateQRZ, todayDir, service):
+def generateQSLs(qsos, apiKey, imgOptions, myName, sendOrSave, keepQSLCard, updateQRZ, todayDir, service):
     generatedQSLs = 0
-    htmlFile = Path.joinpath(qslFilesDir,'QSLGen.html')
+    htmlFile = Path.joinpath(qslFilesDir, 'QSLGen.html')
     for q in qsos:
         callLocalUnderscore = underscore_check(q[13])
         callDistantUnderscore = underscore_check(q[2])
@@ -60,9 +59,8 @@ def generateQSLs(qsos, apiKey, imgkitOptions, myName, sendOrSave, keepQSLCard, u
         currQSL.close()
         filename = f'{callDistantUnderscore} de {callLocalUnderscore}'
         qslCard = Path.joinpath(todayDir, f'{filename}.jpg')
-        imgkit.from_file(htmlFile,
-                         qslCard,
-                         options=imgkitOptions)
+        qslCardImage = Html2Image(size=(imgOptions['width'], imgOptions['height']), output_path=todayDir)
+        qslCardImage.screenshot(html_file=htmlFile, save_as=filename)
         emailer.generate_email(sendOrSave, todayDir, qslCard, filename, myName, q, service)
         if keepQSLCard == 'DELETE':
             print('Deleting QSL card.')
@@ -84,7 +82,7 @@ def generator_main(settings, apiKeys):
         print(f'Permission denied while making directory {todayDir}')
     generatedQSLs = 0
     apiKeyCount = 0
-    imgkitOptions = settings['imgkitOptions']
+    imgOptions = settings['html2image']
     service = oauth.build_service()
 
     for ak in apiKeys:
@@ -116,7 +114,7 @@ def generator_main(settings, apiKeys):
                 if yesno:
                     generatedQSLs = generatedQSLs + generateQSLs(selected_qsos,
                                                                  ak,
-                                                                 imgkitOptions,
+                                                                 imgOptions,
                                                                  settings['myName'],
                                                                  settings['email'],
                                                                  settings['keepQSLCard'],
