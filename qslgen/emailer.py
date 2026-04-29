@@ -1,9 +1,9 @@
 import base64
-from email.mime.multipart import MIMEMultipart
-from email.mime.text import MIMEText
-from apiclient import errors
 import mimetypes
-from email.mime.image import MIMEImage
+from pathlib import Path
+from email.message import EmailMessage
+
+from apiclient import errors
 
 
 def send_email(service, msg):
@@ -16,7 +16,7 @@ def send_email(service, msg):
         return "Error"
 
 
-def generate_email(sendOrSave, todayDir, filename, myName, q, service):
+def generate_email(sendOrSave, todayDir, qslCard, filename, myName, q, service):
     emailName = q[10].title()
     to = f'{q[3]}'
     subject = f'QSL de {q[13]}'
@@ -28,25 +28,27 @@ def generate_email(sendOrSave, todayDir, filename, myName, q, service):
             f'{myName}\n\n'
             f'* This email was automatically generated and sent using the QSLGen Python script '
             f'by KF3OFP/DA6AJP: https://github.com/drdrewusaf/QSLGen *')
-    message = MIMEMultipart('mixed')
+    message = EmailMessage()
     message['to'] = to
     message['subject'] = subject
-    message.attach(MIMEText(body, 'plain'))
+    message.set_content(body)
 
-    content_type, encoding = mimetypes.guess_type(f'{todayDir}\\{filename}.jpg')
-    main_type, sub_type = content_type.split('/', 1)
-    qsl_card = open(f'{todayDir}\\{filename}.jpg', 'rb')
-    attachment = MIMEImage(qsl_card.read(), _subtype=sub_type)
-    qsl_card.close()
-    attachment.add_header('Content-Disposition', 'attachment', filename=filename)
-    message.attach(attachment)
+    contentType = mimetypes.guess_type(qslCard)
+    mainType, subType = contentType[0].split('/')
+    with open(qslCard, 'rb') as att:
+        qslCardData = att.read()
+        att.close()
+    message.add_attachment(qslCardData, mainType, subType)
+    encodedMessage = base64.urlsafe_b64encode(message.as_bytes()).decode()
+    msg = {"raw": encodedMessage}
 
-    encodedMessage = {'raw': base64.urlsafe_b64encode(message.as_string())}
+    send_email(service, msg)
 
     if sendOrSave == 'SEND':
         print(f'Sending QSL card email to {q[2]}.')
         send_email(service, encodedMessage)
     else:
-        with open(f'{todayDir}\\{filename}.eml', 'wb') as eml:
+        emlFile = Path.joinpath(todayDir, f'{filename}.eml')
+        with open(emlFile, 'wb') as eml:
             eml.write(message.as_bytes())
-        print(f'Message saved as {todayDir}\\{filename}.eml')
+        print(f'Message saved as {emlFile}')

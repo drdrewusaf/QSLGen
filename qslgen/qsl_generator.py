@@ -59,14 +59,14 @@ def generateQSLs(qsos, apiKey, imgkitOptions, myName, sendOrSave, keepQSLCard, u
             currQSL.write(str(soup))
         currQSL.close()
         filename = f'{callDistantUnderscore} de {callLocalUnderscore}'
-        oPath = Path.joinpath(todayDir, f'{filename}.jpg')
+        qslCard = Path.joinpath(todayDir, f'{filename}.jpg')
         imgkit.from_file(htmlFile,
-                         oPath,
+                         qslCard,
                          options=imgkitOptions)
-        emailer.generate_email(sendOrSave, todayDir, filename, myName, q, service)
+        emailer.generate_email(sendOrSave, todayDir, qslCard, filename, myName, q, service)
         if keepQSLCard == 'DELETE':
             print('Deleting QSL card.')
-            os.remove(oPath)
+            os.remove(qslCard)
         if updateQRZ == 'YES':
             api_write.write_data(q, apiKey)
         generatedQSLs += 1
