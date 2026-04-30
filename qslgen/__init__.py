@@ -2,7 +2,7 @@ import datetime
 from pathlib import Path
 
 __package_name__ = 'QSLGen'
-__version__ = 2.0
+__version__ = 1.5
 __author__ = 'KF3OFP'
 
 # These are the dictionary keys in the ADIF data we want to work with.

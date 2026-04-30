@@ -73,7 +73,7 @@ def generateQSLs(qsos, apiKey, imgOptions, myName, sendOrSave, keepQSLCard, upda
 
 def generator_main(settings, apiKeys):
     dateSince = datetime.date.fromisoformat(settings['dateSince'])
-    todayDir = Path.joinpath(configDir, 'cards', f'{settings['dateSince']}')
+    todayDir = Path.joinpath(Path(__file__).parent, 'cards', f'{settings['dateSince']}')
     try:
         os.mkdir(todayDir)
     except FileExistsError:
