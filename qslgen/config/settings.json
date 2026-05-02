@@ -3,9 +3,9 @@
   "email": "SEND",
   "keepQSLCard": "DELETE",
   "updateQRZ": "UPDATE",
-  "myName": "Andrew Post",
-  "dateSince": "2026-02-17",
-  "myEmail": "drdrewusaf@gmail.com",
+  "myName": "",
+  "dateSince": "",
+  "myEmail": "",
   "html2image": {
     "format": "jpg",
     "width": "1800",
