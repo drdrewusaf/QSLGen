@@ -49,7 +49,7 @@ To setup your API:
 - Download the JSON file containing these credentials for use in your application.
 
 ### Background Image
-If you choose to have a background image the filename <strong>MUST</strong> follow the naming convention of the included file for <strong>ALL</strong> callsigns/API keys QSLGen will run through.  The naming convention is your callsign in all caps followed by underscore ( _ ) followed by "bg".  If you have a prefix or suffix on a callsign, replace the slash ( / ) with an underscore ( _ ).
+Your QSL card's background image filename <strong>MUST</strong> follow the naming convention of the included file for <strong>ALL</strong> callsigns/API keys QSLGen will run through.  The naming convention is your callsign in all caps followed by underscore ( _ ) followed by "bg".  If you have a prefix or suffix on a callsign, replace the slash ( / ) with an underscore ( _ ).
 - Regular callsign (ex. DA6AJP): ```DA6AJP_bg.jpg```
 - Callsign with prefix (ex. SO/DA6AJP): ```SO_DA6AJP_bg.jpg```
 
@@ -63,7 +63,7 @@ The QSLGen.html file ships with/is included with the QSLGen package and is where
 The Curr_QSLGen.html file is created on the fly while QSLGen is running and iterating through your QSOs.  
 
 ### API Key(s)
-QSLGen needs your API key(s). You can enter them in the program, and it will create and encrypt an apikeys.txt file with the API keys given.
+QSLGen needs your API key(s). You will enter them in the settings menu, and it will create and encrypt an apikeys.txt file with the API keys given.
 
 ***
 ## Usage
