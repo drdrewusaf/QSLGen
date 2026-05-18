@@ -1,6 +1,6 @@
 """
 Perform local encryption on of certain files.  The generated en/decryption key
-is not protected from outsiders other than being in the user's directory....
+is not protected from outsiders other than being in the user's home directory...
 """
 import errno
 from pathlib import Path
@@ -56,7 +56,6 @@ def decrypt_data(message, cryptoKey):
     try:
         decryptedMessage = f.decrypt(message).decode()
     except (cryptography.fernet.InvalidToken, cryptography.fernet.InvalidSignature):
-        print(f'\nThe crypto key supplied could not decrypt the API keys. '
-              f'\nYou will need to supply the correct key in {userDir}, or update the apikeys.txt file.')
+        print(f'\nThe crypto key supplied could not decrypt the file.')
         decryptedMessage = False
     return decryptedMessage

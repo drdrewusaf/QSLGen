@@ -2,16 +2,24 @@
 Read data through the QRZ API interface.
 """
 import re
-import requests
-import html2text
+from time import sleep
+
 import adif_io
+import html2text
+import requests
 
 from qslgen import headers as head
 from qslgen.logger import writer as log_writer
-from time import sleep
 
 
 def request_data(apiKey, dateSince):
+    """
+    Requests QSOs associated with the current API key and since the date requested by the user (either explicitly, or
+    based on the previous run).
+    :param apiKey: the current API key being worked on
+    :param dateSince: the date from which to request QSOs - based on the date in the settings json file
+    :return: QSOs that meet the API key and date since criteria, if any
+    """
     tryNum = 3
     qsos = []
     print(f'Gathering confirmed QSOs since {dateSince} for logbook API key {apiKey}...')
@@ -35,7 +43,7 @@ def request_data(apiKey, dateSince):
                 qsos = adif_io.read_from_string(data)[0]
             except:
                 if 'invalid api key' in data:
-                    log_writer('Check your API Key. QRZ.com reported an invalid key.', end=False)
+                    log_writer('Check your API Key. QRZ.com reported an invalid key.\n', end=False)
                     print('Check your API Key. QRZ.com reported an invalid key.')
                 else:
                     log_writer(f'Regex search failed. Probably no confirmed QSOs since {dateSince}.\n'
@@ -44,7 +52,6 @@ def request_data(apiKey, dateSince):
                                f'data: {data}\n',
                                end=False)
                     print(f'Regex search failed. Probably no confirmed QSOs since {dateSince}.')
-                    log_writer('')
                     print(f'Here is the data the server returned: {data}')
             tryNum = 0
         except Exception as e:
@@ -52,6 +59,6 @@ def request_data(apiKey, dateSince):
                 print(f'\nThere was an error connecting to the server.  Will retry {tryNum} more times.'
                       f'\nError:  {e}')
             else:
-                print(f'Too many connection errors. Returning to main menu.')
-                return 'error'
+                print(f'Too many connection errors.')
+                return 'connError'
     return qsos

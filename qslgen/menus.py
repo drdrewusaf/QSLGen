@@ -1,13 +1,22 @@
+"""
+Almost all of QSLgen's menus. The only menu not here is the API key editing menu.
+"""
 import json
 import re
 
 import qsl_generator
 from qrz_api.key_mgmt import load_api_keys, edit_api_keys
-from qslgen import settingsFile
 from qslgen import oauth
+from qslgen import settingsFile
 
 
 def main_menu(settings):
+    """
+    Main menu at the start of QSLGen.
+    :param settings: dict of user settings from the settings json file
+    :return opt: option selected - used for quitting
+    :return totalGeneratedQSLs: total number of QSLs processed this session
+    """
     opt = ''
     totalGeneratedQSLs = 0
     valid = False
@@ -36,6 +45,12 @@ def main_menu(settings):
 
 
 def settings_menu(settings):
+    """
+    Settings menu for the user to define how they want QSLGen to run, add their API keys, and setup their Gmail OAuth
+    should they choose to us it.
+    :param settings: dict from the settings json file
+    :return settings: dict of edited and newly-saved settings
+    """
     valid = False
     while not valid:
         opt = input(f'\n\nPlease select from the following options to update settings:\n'
@@ -43,7 +58,7 @@ def settings_menu(settings):
                     f'\n'
                     f'[2]: Add your OAuth JSON data to be encrypted and stored locally.\n'
                     f'\n'
-                    f'[3]: Change the date from which to fetch QSOs (this uses the API "MODSINCE" option).\n'
+                    f'[3]: Change the date from which to fetch QSOs (this uses the QRZ API "MODSINCE" option).\n'
                     f'       Current:  {settings['dateSince']}\n'
                     f'[4]: Send emails or save emails locally for manual sending later.\n'
                     f'       Current:  {settings['email']}\n'

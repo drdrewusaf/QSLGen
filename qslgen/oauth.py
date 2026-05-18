@@ -1,13 +1,20 @@
+"""
+Gmail OAuth API
+"""
 import json
+
+from google_auth_oauthlib.flow import InstalledAppFlow
+from googleapiclient.discovery import build
 
 from qslgen import crypto
 from qslgen import oauthFile
 
-from googleapiclient.discovery import build
-from google_auth_oauthlib.flow import InstalledAppFlow
-
 
 def build_service():
+    """
+    Build a Gmail service via OAuth session.
+    :return service: the Gmail service
+    """
     flow = InstalledAppFlow.from_client_config(read_oauth_data(),
                                                scopes=['https://www.googleapis.com/auth/gmail.send'])
     credentials = flow.run_local_server(host='localhost',
@@ -19,6 +26,10 @@ def build_service():
 
 
 def read_oauth_data():
+    """
+    Decrypt and read the user's OAuth data into memory.
+    :return oauth_data: the decrypted OAuth data
+    """
     cryptoKey = crypto.load_crypto_key()
     try:
         with open(oauthFile, 'rb') as f:
@@ -36,6 +47,10 @@ def read_oauth_data():
 
 
 def write_oauth_data(oauth_str):
+    """
+    Encrypt the user-provided Gmail OAuth data and save it to a local file.
+    :param oauth_str:
+    """
     cryptoKey = crypto.load_crypto_key()
     try:
         with open(oauthFile, 'wb') as f:

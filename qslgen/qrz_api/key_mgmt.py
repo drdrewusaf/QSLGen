@@ -1,3 +1,6 @@
+"""
+API Key management tools for local storage
+"""
 import re
 
 import qslgen.crypto as crypto
@@ -6,7 +9,7 @@ from qslgen import apiKeysFile
 
 def edit_api_keys(newKeys):
     """
-    Main menu for editing the API keys file.
+    Main menu for editing the apikeys.txt file.
     """
     editsDone = False
     while not editsDone:
@@ -45,7 +48,7 @@ def edit_api_keys(newKeys):
 
 def add_api_keys():
     """
-    Based on user input, create an array of API keys to be added to the text file.
+    Based on user input, create an array of API keys to be added to the apikeys.txt file.
     """
     addedKeys = []
     finished = False
@@ -71,7 +74,7 @@ def add_api_keys():
 
 def validate_api_key(key):
     """
-    Validate the key format - does not validate typos/incorrect keys.
+    Validate the key format - only validates format, does not validate typos/incorrect keys.
     """
     if re.match('(\\d|[A-z]){4}(-?)(\\d|[A-z]){4}(-?)(\\d|[A-z]){4}(-?)(\\d|[A-z]){4}(-?)', key):
         return True

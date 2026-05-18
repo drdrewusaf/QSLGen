@@ -1,9 +1,7 @@
 """
 Log writer...
 """
-import datetime
-
-today = str(datetime.date.today()).replace('-', '')
+from qslgen import today
 
 
 def writer(message, end=True):

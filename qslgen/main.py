@@ -1,14 +1,20 @@
+"""
+QSLGen Main
+"""
 import json
 import re
-import os
 
 import menus as menu
 from logger import writer as log_writer
-from qslgen import today
 from qslgen import settingsFile
+from qslgen import today
 
 
 def load_settings():
+    """
+    Load the settings json file.
+    :return settings: dict of settings from the settings json file
+    """
     with open(settingsFile, 'r') as sf:
         settings = json.load(sf)
         sf.close()
@@ -18,6 +24,9 @@ def load_settings():
 
 
 def main():
+    """
+    Main function
+    """
     settings = load_settings()
     opt, totalGeneratedQSLs = menu.main_menu(settings)
     if opt == 'q':
