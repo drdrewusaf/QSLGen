@@ -68,7 +68,7 @@ def add_api_keys():
             addedKeys.append(newKey)
             print(f'\nKey {newKey} added successfully.')
         else:
-            pass
+            print(f'{newKey} does not follow the QRZ API key format. Please check your key and try again.')
     return addedKeys
 
 
